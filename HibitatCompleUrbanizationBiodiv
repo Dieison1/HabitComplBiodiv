@@ -133,21 +133,13 @@ print(table(DataEuaFish1$HabitatComplexity1))
 
 ## Log-transforming density
 DataEuaFish1$FishDensity<-log10(DataEuaFish1$FishDensity)
-
-### We will scale diversity metrics in maximum and minumum values to put slopes at a similar
-
 ##*1000 transform local and regional LCBD
 DataEuaFish1$LocalFishTotalLCBD<-(asin(sqrt(DataEuaFish1$LocalFishTotalLCBD)))*100
-DataEuaFish1$LocalFishReplLCBD<-(asin(sqrt(DataEuaFish1$LocalFishReplLCBD)))*100
-DataEuaFish1$LocalFishRichLCBD<-(asin(sqrt(DataEuaFish1$LocalFishRichLCBD)))*100
-
 DataEuaFish1$RegionalFishTotalLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishTotalLBCD)))*1000
-DataEuaFish1$RegionalFishReplLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishReplLBCD)))*1000
-DataEuaFish1$RegionalFishRichLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishRichLBCD)))*1000
 
 #----------------------------------------------Fish dataset--------------------------------------------------##
 DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions',' YEAR', 'HabitatComplexity', "XFC_NAT",
-                                          'InsectDensity', 'Insect_RarefiedChaoRichness','ObservedInsectRichness',
+                                          'InsectDensity', 'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
                                            'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
                                            'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD',
                                             'UrbanActivityIndex')])
@@ -162,19 +154,15 @@ print(table(DataEuaInsect$HabitatComplexity1))
 DataEuaInsect1$InsectDensity<-log(DataEuaInsect1$InsectDensity+0.1)
 ##*1000 transform local and regional LCBD
 DataEuaInsect1$LocalInsectTotalLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectTotalLCBD)))*100
-DataEuaInsect1$LocalInsectReplLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectReplLCBD)))*100
-DataEuaInsect1$LocalInsectRichLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectRichLCBD)))*100
-
 DataEuaInsect1$RegionalInsectTotalLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectTotalLBCD)))*1000
-DataEuaInsect1$RegionalInsectReplLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectReplLBCD)))*1000
-DataEuaInsect1$RegionalInsectRichLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectRichLBCD)))*1000
+
 
 
 
 ##################################################################################################################################################
-### Now, we will analyze the role of habitat complexity (High vs. Low) in buffering the impacts of urban intensification on the biodiversity
+### Now, we will analyze the role of habitat complexity (High vs. Low) in buffering the impacts of urban intensification on biodiversity
 
-###------------------------------ Species richness-----------------------------###
+###--------------------------Species richness ~ Habitat complexity vs. Urban intensification----------------------------------#
 ## Species Richness vs Urban Intensification
 # Log-transforming rarefied richness
 DataEuaFish1$Fish_RarefiedChaoRichness1<-log(DataEuaFish1$Fish_RarefiedChaoRichness)
@@ -216,7 +204,7 @@ tab_model(Modelb$model,transform = NULL)
 # Check model assumptions
 Supplementary.Figure<-resid_panel(Modelb$model)
 
-###------------------------------Total density----------------------------###
+###------------------------------Total density ~ Habitat complexity vs. Urban intensification----------------------------------#
 ## Total density vs Human activity Index
 ###--------------Fish
 Modelc <- GLMERSelect(modelData = DataEuaFish1,
@@ -257,7 +245,7 @@ tab_model(Modeld$model,transform = NULL)
 Supplementary.Figure<-resid_panel(Modeld$model)
 
 
-###---------------------------Ecoregional Total beta-diversity LCBD---------------------------###
+###---------------Ecoregional Total beta-diversity LCBD ~ Habitat complexity vs. Urban intensification----------------------------------#
 ###--------------Fish
 Modele <- GLMERSelect(modelData = DataEuaFish1,
                       responseVar = "LocalFishTotalLCBD",
@@ -305,7 +293,7 @@ tab_model(Modelfb)
 # Check model assumptions
 Supplementary.Figure<-resid_panel(Modelh$model)
 
-###---------------------------National total beta-diversity LCBD---------------------------###
+###-------------------National total beta-diversity LCBD ~ Habitat complexity vs. Urban intensification----------------------------------#
 ###--------------Fish
 Modelg <- GLMERSelect(modelData = DataEuaFish1,
                       responseVar = "RegionalFishTotalLBCD",
@@ -360,56 +348,56 @@ Supplementary.Figure<-resid_panel(Modelh$model)
 
 
 # Create dataframe for values to predict response to richness, density, and LCBD of fish and insect 
-## ModelA - Fish richness vs Urban intensification
+## ModelA - Fish richness ~ Habitat complexity vs. Urban intensification
 nda <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modela$data$UrbanActivityIndex),to = max(Modela$data$UrbanActivityIndex),
                             length.out = 100),
   HabitatComplexity=factor(c("High","Low"),levels = levels(Modela$data$HabitatComplexity)))
 nda
 
-## ModelB - Insects richness vs Urban intensification
+## ModelB - Insects richness ~ Habitat complexity vs. Urban intensification
 ndb <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modelb$data$UrbanActivityIndex),to = max(Modelb$data$UrbanActivityIndex),
                     length.out = 100),
   HabitatComplexity=factor(c("High","Low"),levels = levels(Modelb$data$HabitatComplexity)))
 ndb
 
-## ModelC - Fish Density vs Urban intensification
+## ModelC - Fish Density ~ Habitat complexity vs. Urban intensification
 ndc <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modelc$data$UrbanActivityIndex),to = max(Modelc$data$UrbanActivityIndex),
                                          length.out = 100),
   HabitatComplexity=factor(c("High","Low"),levels = levels(Modelc$data$HabitatComplexity)))
 ndc
 
-## ModelD - Insects density vs Urban intensification
+## ModelD - Insects density ~ Habitat complexity vs. Urban intensification
 ndd <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modeld$data$UrbanActivityIndex),to = max(Modele$data$UrbanActivityIndex),
                            length.out = 100),
   HabitatComplexity=factor(c("High","Low"),levels = levels(Modeld$data$HabitatComplexity)))
 ndd
 
-## ModelE - Fish local LCBD vs Urban intensification
+## ModelE - Fish Ecoregional LCBD ~ Habitat complexity vs. Urban intensification
 nde <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modele$data$UrbanActivityIndex),to = max(Modele$data$UrbanActivityIndex),
                          length.out = 100),
   HabitatComplexity=factor(c("High","Low"),levels = levels(Modele$data$HabitatComplexity)))
 nde
 
-## ModelF - Insects local LCBD vs Urban intensification
+## ModelF - Insects Ecoregional LCBD ~ Habitat complexity vs. Urban intensification
 ndf <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modelf$data$UrbanActivityIndex),to = max(Modelf$data$UrbanActivityIndex),
                          length.out = 100),
   HabitatComplexity=factor(c("High","Low"),levels = levels(Modelf$data$HabitatComplexity)))
 ndf
 
-## ModelG - Fish regional LCBD vs Urban intensification
+## ModelG - Fish National LCBD ~ Habitat complexity vs. Urban intensification
 ndg <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modelg$data$UrbanActivityIndex),to = max(Modelg$data$UrbanActivityIndex),
                          length.out = 100),
   HabitatComplexity=factor(c("High","Low"),levels = levels(Modelg$data$HabitatComplexity)))
 ndg
 
-## ModelH - Insects local LCBD vs Urban intensification
+## ModelH - Insects National LCBD ~ Habitat complexity vs. Urban intensification
 ndh <- expand.grid(
   UrbanActivityIndex=seq(from = min(Modelh$data$UrbanActivityIndex),to = max(Modelh$data$UrbanActivityIndex),
                          length.out = 100),
