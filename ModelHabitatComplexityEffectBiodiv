@@ -1,0 +1,518 @@
+# In this document, we will analyze the impact of habitat complexity (high vs. low) on the richness, density, and LCBD of fish and insects
+## Load packages
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(car)
+library(MASS)
+library(lme4)
+library(MResModelling)
+library(sjPlot)
+library(StatisticalModels)
+library(factoextra)
+library(ggResidpanel)
+
+# The database for the analysis can be downloaded at: 
+https://www.epa.gov/national-aquatic-resource-surveys/data-national-aquatic-resource-surveys 
+https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset.  
+
+## Remove NAs in the specified columns
+##-----------------------------------------Fish dataset--------------------------------------------------------##
+DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions','YEAR', 'HabitatComplexity', "XFC_NAT",
+                               'LAT_DD83', 'LON_DD83','FishDensity','Fish_RarefiedChaoRichness','ObservedFishRichness',
+                               'LocalFishTotalLCBD', 'LocalFishReplLCBD', 'LocalFishRichLCBD',
+                               'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD')])
+
+# Look at the spread of habitat heterogeneity/categories
+print(table(DataEuaFish1$HabitatComplexity1))
+
+# Good-habitat heterogeneity     Poor-habitat complexity
+         #1772                          #1780  
+
+## Log-transforming density
+DataEuaFish1$FishDensity<-log10(DataEuaFish1$FishDensity)
+
+### We will scale diversity metrics in maximum and minumum values to put slopes at a similar
+
+##*1000 transform local and regional LCBD
+DataEuaFish1$LocalFishTotalLCBD<-(asin(sqrt(DataEuaFish1$LocalFishTotalLCBD)))*100
+DataEuaFish1$LocalFishReplLCBD<-(asin(sqrt(DataEuaFish1$LocalFishReplLCBD)))*100
+DataEuaFish1$LocalFishRichLCBD<-(asin(sqrt(DataEuaFish1$LocalFishRichLCBD)))*100
+
+DataEuaFish1$RegionalFishTotalLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishTotalLBCD)))*1000
+DataEuaFish1$RegionalFishReplLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishReplLBCD)))*1000
+DataEuaFish1$RegionalFishRichLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishRichLBCD)))*1000
+
+
+##----------------------------------------Insect dataset--------------------------------------------------------##
+## Remove NAs in the specified columns
+DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions','YEAR','HabitatComplexity'',"XFC_NAT",
+                                          'InsectDensity', 'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
+                                           'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
+                                           'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD')])
+
+# Look at the spread of habitat heterogeneity/categories
+print(table(DataEuaInsect$HabitatComplexity1))
+
+# High-habitat heterogeneity     Low-habitat complexity
+          #2049                          #2044  
+
+## Log-transforming insect density metrics
+DataEuaInsect1$InsectDensity<-log(DataEuaInsect1$InsectDensity+0.1)
+##*1000 transform local and regional LCBD
+DataEuaInsect1$LocalInsectTotalLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectTotalLCBD)))*100
+DataEuaInsect1$LocalInsectReplLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectReplLCBD)))*100
+DataEuaInsect1$LocalInsectRichLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectRichLCBD)))*100
+
+DataEuaInsect1$RegionalInsectTotalLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectTotalLBCD)))*1000
+DataEuaInsect1$RegionalInsectReplLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectReplLBCD)))*1000
+DataEuaInsect1$RegionalInsectRichLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectRichLBCD)))*1000
+
+############################################################################################################################################################################
+## Analyzing chance in the diversity among sites with high vs. low habitat complexity
+# Species richness
+# Total density
+# Ecoregional LCBD
+# National LCBD
+
+#------------------------- Fish richness-------------------------------------#
+m1 <- GLMER(modelData = DataEuaFish1,
+            responseVar = "Fish_RarefiedChaoRichness",fitFamily = "poisson",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",REML = T)
+
+# Save model output   
+Anova(m1$model)
+summary(m1$model)
+tab_model(m1$model)
+R2GLMER(m1$model)
+
+# Check model assumptions
+resid_panel(m1$model)
+
+
+
+#------------------------Insect richness-------------------------------------#
+m2 <- GLMER(modelData = DataEuaInsect1,
+            responseVar = "Insect_RarefiedChaoRichness",fitFamily = "poisson",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",REML = FALSE)
+
+# Save model output   
+Anova(m2$model)
+summary(m2$model)
+tab_model(m2$model)
+R2GLMER(m2$model)
+
+# Check model assumptions
+resid_panel(m2$model)
+
+
+#------------------------Fish density-------------------------------------#
+m3 <- GLMER(modelData = DataEuaFish1,
+            responseVar = "FishDensity",fitFamily = "gaussian",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",
+            REML = FALSE)
+
+# Save model output   
+Anova(m3$model)
+summary(m3$model)
+tab_model(m3$model)
+R2GLMER(m3$model)
+
+# Check model assumptions
+resid_panel(m3$model)
+
+
+#------------------------Insect density-------------------------------------#
+m4 <- GLMER(modelData = DataEuaInsect1,
+            responseVar = "InsectDensity",
+            fitFamily = "gaussian",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",
+            REML = FALSE)
+# Save model output   
+Anova(m4$model)
+summary(m4$model)
+tab_model(m4$model)
+R2GLMER(m4$model)
+
+# Check model assumptions
+resid_panel(m4$model)
+
+
+#-----------------------Fish Ecoregional TotalBetadiversity LCBD -----------------------------#
+m5 <- GLMER(modelData = DataEuaFish1,
+            responseVar = "LocalFishTotalLCBD",
+            fitFamily="gaussian",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",
+            REML = F)
+# Save model output   
+Anova(m5$model, type = "II")
+summary(m5$model)
+tab_model(m5$model)
+R2GLMER(m5$model)
+
+# Check model assumptions
+resid_panel(m5$model)
+
+#-----------------------Insect Ecoregional TotalBetadiversity LCBD -----------------------------#
+m6 <- GLMER(modelData = DataEuaInsect1,
+            responseVar = "LocalInsectTotalLCBD",
+            fitFamily = "gaussian",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",REML = FALSE)
+
+# Save model output 
+Anova(m6$model)
+summary(m6$model)
+tab_model(m6$model)
+R2GLMER(m6$model)
+
+# Check model assumptions
+resid_panel(m6$model)
+
+#-----------------------Fish National TotalBetadiversity LCBD -----------------------------#
+m7 <- GLMER(modelData = DataEuaFish1,
+            responseVar = "RegionalFishTotalLBCD",
+            fitFamily="gaussian",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",
+            REML = F)
+# Save model output   
+Anova(m7$model, type = "II")
+summary(m7$model)
+tab_model(m7$model)
+R2GLMER(m7$model)
+
+# Check model assumptions
+resid_panel(m7$model)
+
+#-----------------------Insect National TotalBetadiversity LCBD -----------------------------#
+m8 <- GLMER(modelData = DataEuaInsect1,
+            responseVar = "RegionalInsectTotalLBCD",
+            fitFamily = "gaussian",
+            fixedStruct = "HabitatComplexity1",
+            randomStruct = "(1|Ecoregions)+(1|YEAR)",REML = FALSE)
+
+# Save model output 
+Anova(m8$model)
+summary(m8$model)
+tab_model(m8$model)
+R2GLMER(m8$model)
+
+# Check model assumptions
+resid_panel(m8$model)
+
+
+# Create dataframe for values to predict response to fish 
+nd <- data.frame(HabitatComplexity1=factor(c("High", "Low")),
+                 Fish_RarefiedChaoRichness=0,
+                 FishDensity=0,
+                 LocalFishTotalLCBD=0,
+                 RegionalFishTotalLBCD=0)
+
+# Create dataframe for values to predict response to fish and Insect
+nd_Insect <- data.frame(HabitatComplexity1=factor(c("High", "Low")),
+                 Insect_RarefiedChaoRichness=0,
+                 InsectDensity=0,
+                 LocalInsectTotalLCBD=0,
+                 RegionalInsectTotalLBCD=0)
+
+# Fish species richness predictions ##
+FishRichness.preds <- PredictGLMERRandIter(model = m1$model, data = nd)
+FishRichness.preds <- exp(FishRichness.preds)
+# Convert to percentage difference from good complexity
+FishRichness.preds <- sweep(x = FishRichness.preds, MARGIN = 2, STATS = FishRichness.preds[1,], FUN = '/')
+
+# get quantiles
+FishRichness.preds.median <- ((apply(X = FishRichness.preds,MARGIN = 1,FUN = median))*100)-100
+FishRichness.preds.upper <- ((apply(X = FishRichness.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+FishRichness.preds.lower <- ((apply(X = FishRichness.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+## Insect species richness predictions ##
+InsectRichness.preds <- PredictGLMERRandIter(model = m2$model, data = nd_Insect)
+InsectRichness.preds <- exp(InsectRichness.preds)
+
+# Convert to percentage difference from High Complexity
+InsectRichness.preds <- sweep(x = InsectRichness.preds, MARGIN = 2, STATS = InsectRichness.preds[1,], FUN = '/')
+
+# get quantiles
+InsectRichness.preds.median <- ((apply(X = InsectRichness.preds,MARGIN = 1,FUN = median))*100)-100
+InsectRichness.preds.upper <- ((apply(X = InsectRichness.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+InsectRichness.preds.lower <- ((apply(X = InsectRichness.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+## Fish density predictions ##
+FishDensity.preds <- PredictGLMERRandIter(model = m3$model, data = nd)
+FishDensity.preds <- exp(FishDensity.preds)
+
+# Convert to percentage difference from High Complexity
+FishDensity.preds <- sweep(x = FishDensity.preds, MARGIN = 2, STATS = FishDensity.preds[1,], FUN = '/')
+
+# get quantiles
+FishDensity.preds.median <- ((apply(X = FishDensity.preds,MARGIN = 1,FUN = median))*100)-100
+FishDensity.preds.upper <- ((apply(X = FishDensity.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+FishDensity.preds.lower <- ((apply(X = FishDensity.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+## Insect density predictions ##
+InsectDensity.preds <- PredictGLMERRandIter(model = m4$model, data = nd_Insect)
+InsectDensity.preds <- exp(InsectDensity.preds)
+
+# Convert to percentage difference from High Complexity
+InsectDensity.preds <- sweep(x = InsectDensity.preds, MARGIN = 2, STATS = InsectDensity.preds[1,], FUN = '/')
+
+# get quantiles
+InsectDensity.preds.median <- ((apply(X = InsectDensity.preds,MARGIN = 1,FUN = median))*100)-100
+InsectDensity.preds.upper <- ((apply(X = InsectDensity.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+InsectDensity.preds.lower <- ((apply(X = InsectDensity.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+## Fish local LCBD predictions ##
+LocalFishLCBD.preds <- PredictGLMERRandIter(model = m5$model, data = nd)
+LocalFishLCBD.preds <- exp(LocalFishLCBD.preds)
+
+# Convert to percentage difference from High complexity
+LocalFishLCBD.preds <- sweep(x = LocalFishLCBD.preds, MARGIN = 2, STATS = LocalFishLCBD.preds[1,], FUN = '/')
+
+# get quantiles
+LocalFishLCBD.preds.median <- ((apply(X = LocalFishLCBD.preds,MARGIN = 1,FUN = median))*100)-100
+LocalFishLCBD.preds.upper <- ((apply(X = LocalFishLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+LocalFishLCBD.preds.lower <- ((apply(X = LocalFishLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+## Insect local LCBD predictions ##
+LocalInsectLCBD.preds <- PredictGLMERRandIter(model = m6$model, data = nd_Insect)
+LocalInsectLCBD.preds <- exp(LocalInsectLCBD.preds)
+
+# Convert to percentage difference from High Complexity
+LocalInsectLCBD.preds <- sweep(x = LocalInsectLCBD.preds, MARGIN = 2, STATS = LocalInsectLCBD.preds[1,], FUN = '/')
+
+# get quantiles
+LocalInsectLCBD.preds.median <- ((apply(X = LocalInsectLCBD.preds,MARGIN = 1,FUN = median))*100)-100
+LocalInsectLCBD.preds.upper <- ((apply(X = LocalInsectLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+LocalInsectLCBD.preds.lower <- ((apply(X = LocalInsectLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+
+## Fish regional LCBD predictions ##
+RegionalFishRegLCBD.preds <- PredictGLMERRandIter(model = m7$model, data = nd)
+RegionalFishRegLCBD.preds <- exp(RegionalFishRegLCBD.preds)
+
+# Convert to percentage difference from High Complexity
+RegionalFishRegLCBD.preds <- sweep(x = RegionalFishRegLCBD.preds, MARGIN = 2, STATS = RegionalFishRegLCBD.preds[1,], FUN = '/')
+
+# get quantiles
+RegionalFishRegLCBD.preds.median <- ((apply(X = RegionalFishRegLCBD.preds,MARGIN = 1,FUN = median))*100)-100
+RegionalFishRegLCBD.preds.upper <- ((apply(X = RegionalFishRegLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+RegionalFishRegLCBD.preds.lower <- ((apply(X =RegionalFishRegLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+
+## Insect regional LCBD predictions ##
+RegionalInsectRegLCBD.preds <- PredictGLMERRandIter(model = m8$model, data = nd_Insect)
+RegionalInsectRegLCBD.preds <- exp(RegionalInsectRegLCBD.preds)
+
+# Convert to percentage difference from High Complexity
+RegionalInsectRegLCBD.preds <- sweep(x = RegionalInsectRegLCBD.preds, MARGIN = 2, STATS = RegionalInsectRegLCBD.preds[1,], FUN = '/')
+
+# get quantiles
+RegionalInsectRegLCBD.preds.median <- ((apply(X = RegionalInsectRegLCBD.preds,MARGIN = 1,FUN = median))*100)-100
+RegionalInsectRegLCBD.preds.upper <- ((apply(X = RegionalInsectRegLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.975))*100)-100
+RegionalInsectRegLCBD.preds.lower <- ((apply(X =RegionalInsectRegLCBD.preds,MARGIN = 1,FUN = quantile,probs = 0.025))*100)-100
+
+
+
+# Combine data into one table for plotting
+FishRichness_res <- as.data.frame(cbind(FishRichness.preds.median, FishRichness.preds.lower, FishRichness.preds.upper))
+InsectRichness_res <- as.data.frame(cbind(InsectRichness.preds.median, InsectRichness.preds.lower, InsectRichness.preds.upper))
+FishDensity_res <- as.data.frame(cbind(FishDensity.preds.median, FishDensity.preds.lower, FishDensity.preds.upper))
+InsectDensity_res <- as.data.frame(cbind(InsectDensity.preds.median, InsectDensity.preds.lower, InsectDensity.preds.upper))
+LocalFishLCBD_res <- as.data.frame(cbind(LocalFishLCBD.preds.median, LocalFishLCBD.preds.lower, LocalFishLCBD.preds.upper))
+LocalInsectLCBD_res <- as.data.frame(cbind(LocalInsectLCBD.preds.median, LocalInsectLCBD.preds.lower, LocalInsectLCBD.preds.upper))
+RegionalFishRegLCBD_res <- as.data.frame(cbind(RegionalFishRegLCBD.preds.median,RegionalFishRegLCBD.preds.lower,RegionalFishRegLCBD.preds.upper))
+RegionalInsectRegLCBD_res <- as.data.frame(cbind(RegionalInsectRegLCBD.preds.median,RegionalInsectRegLCBD.preds.lower,RegionalInsectRegLCBD.preds.upper))
+
+
+colnames(FishRichness_res) <- c("median", "lower", "upper")
+colnames(InsectRichness_res) <- c("median", "lower", "upper")
+colnames(FishDensity_res) <- c("median", "lower", "upper")
+colnames(InsectDensity_res) <- c("median", "lower", "upper")
+colnames(LocalFishLCBD_res) <- c("median", "lower", "upper")
+colnames(LocalInsectLCBD_res) <- c("median", "lower", "upper")
+colnames(RegionalFishRegLCBD_res) <- c("median", "lower", "upper")
+colnames(RegionalInsectRegLCBD_res) <- c("median", "lower", "upper")
+
+FishRichness_res$metric <- "FishRich"
+InsectRichness_res$metric <- "InsectRich"
+FishDensity_res$metric <- "FishDens"
+InsectDensity_res$metric <- "InsectDens"
+LocalFishLCBD_res$metric <- "LocalFishLCBD"
+LocalInsectLCBD_res$metric <- "LocalInsectLCBD"
+RegionalFishRegLCBD_res$metric <- "RegionalFishLCBD"
+RegionalInsectRegLCBD_res$metric <- "RegionalInsectLBCD"
+
+
+FishRichness_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
+InsectRichness_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
+FishDensity_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
+InsectDensity_res$HabitatComplexity <- factor(c("High","Low"), levels = c("Good","Poor"))
+LocalFishLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
+LocalInsectLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
+RegionalFishRegLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
+RegionalInsectRegLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
+
+FishRichness_res[FishRichness_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+InsectRichness_res[InsectRichness_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+FishDensity_res[FishDensity_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+InsectDensity_res[InsectDensity_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+LocalFishLCBD_res[LocalFishLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+LocalInsectLCBD_res[LocalInsectLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+RegionalFishRegLCBD_res[RegionalFishRegLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+RegionalInsectRegLCBD_res[RegionalInsectRegLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+
+
+### Joint datasets
+## Richness
+RichnessGroups<-rbind(FishRichness_res, InsectRichness_res)
+RichnessGroups
+
+## Abundance
+AbundanceGroups<-rbind(FishDensity_res, InsectDensity_res)
+AbundanceGroups
+
+## Local LCBD
+LCBDGroups<-rbind(LocalFishLCBD_res,LocalInsectLCBD_res)
+LCBDGroups
+
+## Regional LCBD
+RegLCBDGroups<-rbind(RegionalFishRegLCBD_res,RegionalInsectRegLCBD_res)
+RegLCBDGroups
+
+##%######################################################%##
+#                                                          #
+####           Plot richness, density, and LCBD           ####
+#                                                          #
+##%######################################################%##
+## Fish richness
+Fig1a <- ggplot(data = RichnessGroups) +
+  geom_point(aes(x = HabitatComplexity, y = median, col = metric), size = 3,
+               position=position_dodge(.5)) + 
+  geom_errorbar(aes(x = HabitatComplexity, ymin = lower, ymax = upper,
+                col = metric), size = 0.7, width = 0.1, 
+                position=position_dodge(.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.6) +
+  scale_x_discrete("", labels=c(
+    "High" = "High",
+    "Low" =  "Low"))+
+  scale_y_continuous("Change in rarefied richness (%)",breaks = seq(-30, 30, by=15), limits = c(-30, 30)) +
+  scale_color_manual(values = c("#FF0000","#6600FF")) +
+  theme_light(base_size = 18)+
+  theme(legend.position = c(0.4, 0.26),
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("b")
+Fig1a
+
+## Total density
+Fig1b <- ggplot(data = AbundanceGroups) +
+  geom_point(aes(x = HabitatComplexity, y = median, col = metric), size = 3,
+             position=position_dodge(.5)) + 
+  geom_errorbar(aes(x = HabitatComplexity, ymin = lower, ymax = upper,
+              col = metric), size = 0.7, width = 0.1, 
+              position=position_dodge(.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.6) +
+  scale_x_discrete("", labels=c(
+   "High" = "High",
+    "Low" =  "Low"))+
+ scale_y_continuous("Change in total density (%)",breaks = seq(-60, 60, by=30), limits = c(-60,60)) +
+  scale_color_manual(values = c("#FF0000","#6600FF")) +
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("c")
+Fig1b
+
+## Local LCBD
+Fig1c <- ggplot(data =LCBDGroups) +
+  geom_point(aes(x = HabitatComplexity, y = median, col = metric), size = 3,
+             position=position_dodge(.5)) + 
+  geom_errorbar(aes(x = HabitatComplexity, ymin = lower, ymax = upper,
+             col = metric), size = 0.7, width = 0.1, 
+             position=position_dodge(.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.6) +
+  scale_x_discrete("", labels=c(
+  "High" = "High",
+    "Low" =  "Low"))+
+  scale_y_continuous("Change in ecoregional LCBD (%)",breaks = seq(-60, 60, by=30), limits = c(-60,60)) +
+  scale_color_manual(values = c("#FF0000","#6600FF")) +
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = elehttp://127.0.0.1:39191/graphics/369bba80-e973-4801-844f-7274f9d871ef.pngment_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("d")
+Fig1c
+
+## National LCBD
+Fig1d <- ggplot(data =RegLCBDGroups) +
+  geom_point(aes(x = HabitatComplexity, y = median, col = metric), size = 3,
+             position=position_dodge(.5)) + 
+  geom_errorbar(aes(x = HabitatComplexity, ymin = lower, ymax = upper,
+                    col = metric), size = 0.7, width = 0.1, 
+                position=position_dodge(.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.6) +
+  scale_x_discrete("", labels=c(
+    "High" = "High",
+    "Low" =  "Low"))+
+  scale_y_continuous("Change in national LCBD (%)",breaks = seq(-60, 60, by=30), limits = c(-60,60)) +
+  scale_color_manual(values = c("#FF0000","#6600FF")) +
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = elehttp://127.0.0.1:39191/graphics/369bba80-e973-4801-844f-7274f9d871ef.pngment_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("e")
+Fig1d
+
+
+
+
+
+
