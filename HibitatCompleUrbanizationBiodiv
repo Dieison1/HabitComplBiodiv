@@ -13,8 +13,16 @@ library(StatisticalModels)
 library(factoextra)
 library(ggResidpanel)
 
-## Dataset
-The data to run this analysis can be downloaded at: 
+
+# Load dataset
+### Fish
+DataEuaFish<-read.csv(".FishDataSet.csv", header = TRUE, sep = ";")
+DataEuaFish
+
+### Insects
+DataEuaInsect<-read.csv(".InsectDataSet.csv" header = TRUE, sep = ";")
+DataEuaInsect
+
 
 
 # First we will create an urbanization index using PCA
@@ -119,8 +127,8 @@ DataEuaInsect$UrbanActivityIndex<-UrbanActivityIndex_Insect$PC1
 #############################################################################################################
 ## Remove NAs in the specified columns
 #----------------------------------------------Fish dataset--------------------------------------------------##
-DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions', 'YEAR', 'HabitatComplexity', "XFC_NAT",
-                               'LAT_DD83', 'LON_DD83', 'FishDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
+DataEuaFish1 <- na.omit(DataEuaFish[,c('Ecoregions', 'YEAR', 'HabitatComplexity',
+                                'FishDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
                                'LocalFishTotalLCBD', 'LocalFishReplLCBD', 'LocalFishRichLCBD',
                                'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
                                'UrbanActivityIndex')])
@@ -138,7 +146,7 @@ DataEuaFish1$LocalFishTotalLCBD<-(asin(sqrt(DataEuaFish1$LocalFishTotalLCBD)))*1
 DataEuaFish1$RegionalFishTotalLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishTotalLBCD)))*1000
 
 #----------------------------------------------Fish dataset--------------------------------------------------##
-DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions',' YEAR', 'HabitatComplexity', "XFC_NAT",
+DataEuaInsect1 <- na.omit(DataEuaInsect[,c('Ecoregions',' YEAR', 'HabitatComplexity',
                                           'InsectDensity', 'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
                                            'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
                                            'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD',
