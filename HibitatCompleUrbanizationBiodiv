@@ -14,7 +14,7 @@ library(factoextra)
 library(ggResidpanel)
 
 ## Dataset
-# The data to perform these analyses can be downloaded at: 
+The data to run this analysis can be downloaded at: 
 
 
 # First we will create an urbanization index using PCA
@@ -676,7 +676,7 @@ ndh$HabitatComplexity <- factor(ndh$HabitatComplexity, levels = c("High","Low"))
 ##%######################################################%##
 #                                                          #
 ####        Plot richness, density, and LCBD              ####
-#  Figure 2 in the main manuscript (A, C, E, G)            #
+#  Figure 2 in the main manuscript (A-H)                   #
 ##%######################################################%##
 
 # ---------------------------Fish richness vs. Urban Intensification
@@ -707,7 +707,8 @@ Figa <- ggplot(data = nda, aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("A")
 Figa
 
 # -----------------------Insect richness vs. Urban Intensification
@@ -738,7 +739,8 @@ Figb <- ggplot(data = ndb, aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("B")
 Figb
 
 
@@ -770,7 +772,8 @@ Figc <- ggplot(data = ndc,  aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("C")
 Figc
 
 # ------------------------Insects density vs. Urban Intensification
@@ -801,7 +804,8 @@ Figd <- ggplot(data = ndd, aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("D")
 Figd
 
 # ----------------------Fish Ecoregional LCBD vs. Urban Intensification
@@ -832,7 +836,8 @@ Fige <- ggplot(data = nde, aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("E")
 Fige
 
 # ----------------------------Insect Ecoregional LCBD vs. Urban Intensification
@@ -863,7 +868,8 @@ Figf <- ggplot(data = ndf, aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("F")
 Figf
 
 
@@ -895,7 +901,8 @@ Figg <- ggplot(data = ndg, aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("G")
 Figg
 
 
@@ -927,7 +934,8 @@ Figh <- ggplot(data = ndh, aes(x = UrbanActivityIndex, y = PredMedian)) +
         panel.background = element_blank(), 
         #   axis.ticks = element_line(size = 0.4), 
         axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("H")
 Figh
 
 
