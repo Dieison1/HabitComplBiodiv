@@ -783,7 +783,7 @@ Figc <- ggplot(data = ndc,  aes(x = UrbanActivityIndex, y = PredMedian)) +
   ggtitle("c")
 Figc
 
-# ------------------------insect ecoregional richness differences vs. Urban Intensification
+# ------------------------Insect ecoregional richness differences vs. Urban Intensification
 Figd <- ggplot(data = ndd, aes(x = UrbanActivityIndex, y = PredMedian)) + 
   geom_line(aes(col = HabitatComplexity), size = 0.75) +
   geom_ribbon(aes(ymin = ndd$PredLower, ymax = ndd$PredUpper, 
