@@ -353,20 +353,20 @@ RegionalInsectRegLCBD_res$metric <- "RegionalInsectLBCD"
 FishRichness_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
 InsectRichness_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
 FishDensity_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
-InsectDensity_res$HabitatComplexity <- factor(c("High","Low"), levels = c("Good","Poor"))
+InsectDensity_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
 LocalFishLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
 LocalInsectLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
 RegionalFishRegLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
 RegionalInsectRegLCBD_res$HabitatComplexity <- factor(c("High","Low"), levels = c("High","Low"))
 
-FishRichness_res[FishRichness_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
-InsectRichness_res[InsectRichness_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
-FishDensity_res[FishDensity_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
-InsectDensity_res[InsectDensity_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
-LocalFishLCBD_res[LocalFishLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
-LocalInsectLCBD_res[LocalInsectLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
-RegionalFishRegLCBD_res[RegionalFishRegLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
-RegionalInsectRegLCBD_res[RegionalInsectRegLCBD_res$HabitatComplexity == "Good", c("lower", "upper")] <- NA
+FishRichness_res[FishRichness_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
+InsectRichness_res[InsectRichness_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
+FishDensity_res[FishDensity_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
+InsectDensity_res[InsectDensity_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
+LocalFishLCBD_res[LocalFishLCBD_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
+LocalInsectLCBD_res[LocalInsectLCBD_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
+RegionalFishRegLCBD_res[RegionalFishRegLCBD_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
+RegionalInsectRegLCBD_res[RegionalInsectRegLCBD_res$HabitatComplexity == "High", c("lower", "upper")] <- NA
 
 
 ### Joint datasets
@@ -389,7 +389,7 @@ RegLCBDGroups
 ##%######################################################%##
 #                                                          #
 ####           Plot richness, density, and LCBD           ####
-#                                                          #
+#   Figure 1 of the main manuscript (B, C, D, E)           #
 ##%######################################################%##
 ## Fish richness
 Fig1a <- ggplot(data = RichnessGroups) +
