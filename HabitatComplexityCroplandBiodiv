@@ -1,0 +1,829 @@
+# In this document, we will analyze the interactive effect between habitat complexity (High vs Low) and Cropland intensification on biodiversity 
+
+## Load packages
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(car)
+library(MASS)
+library(lme4)
+library(MResModelling)
+library(sjPlot)
+library(StatisticalModels)
+library(factoextra)
+library(ggResidpanel)
+
+# Dataset 
+The data to run this analysis can be downloaded at: 
+
+#############################################################################################################
+## Remove NAs in the specified columns
+#----------------------------------------------Fish dataset--------------------------------------------------##
+DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions', 'YEAR', 'HabitatComplexity', "XFC_NAT",
+                               'LAT_DD83', 'LON_DD83', 'FishDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
+                               'LocalFishTotalLCBD', 'LocalFishReplLCBD', 'LocalFishRichLCBD',
+                               'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
+                               'CroplandIntensity')])
+
+# look at the spread of habitat Complexity/categories
+print(table(DataEuaFish1$HabitatComplexity1))
+
+# High-habitat Complexity        Low-habitat complexity
+         #1772                        #1780
+
+## Log-transforming density
+DataEuaFish1$FishDensity<-log10(DataEuaFish1$FishDensity)
+
+### We will scale diversity metrics in maximum and minumum values to put slopes at a similar
+
+##*1000 transform local and regional LCBD
+DataEuaFish1$LocalFishTotalLCBD<-(asin(sqrt(DataEuaFish1$LocalFishTotalLCBD)))*100
+DataEuaFish1$LocalFishReplLCBD<-(asin(sqrt(DataEuaFish1$LocalFishReplLCBD)))*100
+DataEuaFish1$LocalFishRichLCBD<-(asin(sqrt(DataEuaFish1$LocalFishRichLCBD)))*100
+
+DataEuaFish1$RegionalFishTotalLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishTotalLBCD)))*1000
+DataEuaFish1$RegionalFishReplLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishReplLBCD)))*1000
+DataEuaFish1$RegionalFishRichLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishRichLBCD)))*1000
+
+#----------------------------------------------Fish dataset--------------------------------------------------##
+DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions',' YEAR', 'HabitatComplexity', "XFC_NAT",
+                                          'InsectDensity', 'Insect_RarefiedChaoRichness','ObservedInsectRichness',
+                                           'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
+                                           'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD',
+                                            'CroplandIntensity')])
+
+# Look at the spread of habitat complexity/categories
+print(table(DataEuaInsect$HabitatComplexity1))
+
+# High-habitat complexity     Low-habitat complexity
+          #2049                          #2044  
+
+## Log-transforming fish density metrics
+DataEuaInsect1$InsectDensity<-log(DataEuaInsect1$InsectDensity+0.1)
+##*1000 transform local and regional LCBD
+DataEuaInsect1$LocalInsectTotalLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectTotalLCBD)))*100
+DataEuaInsect1$LocalInsectReplLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectReplLCBD)))*100
+DataEuaInsect1$LocalInsectRichLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectRichLCBD)))*100
+
+DataEuaInsect1$RegionalInsectTotalLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectTotalLBCD)))*1000
+DataEuaInsect1$RegionalInsectReplLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectReplLBCD)))*1000
+DataEuaInsect1$RegionalInsectRichLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectRichLBCD)))*1000
+
+
+
+##################################################################################################################################################
+### Now, we will analyze the role of habitat complexity (High vs. Low) in buffering the impacts of Cropland intensification on the biodiversity
+
+###------------------------------ Species richness-----------------------------###
+## Species Richness vs Cropland Intensification
+# Log-transforming rarefied richness
+DataEuaFish1$Fish_RarefiedChaoRichness1<-log(DataEuaFish1$Fish_RarefiedChaoRichness)
+DataEuaInsect1$Insect_RarefiedChaoRichness1<-log(DataEuaInsect1$Insect_RarefiedChaoRichness)
+
+###--------------Fish
+Model1a <- GLMERSelect(modelData = DataEuaFish1,
+                      responseVar = "Fish_RarefiedChaoRichness",
+                      fitFamily = "poisson",
+                      fixedFactors = "HabitatComplexity",
+                      fixedTerms = list(CroplandIntensity=1),
+                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
+
+# Save model output 
+summary(Model1a$model)
+Model1aStats <- as.data.frame(Model1a$stats)
+Model1aStats
+tab_model(Model1a$model)
+
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Model1a$model)
+
+
+###--------------Insect
+Model1b <- GLMERSelect(modelData = DataEuaInsect1,
+                      responseVar = "Insect_RarefiedChaoRichness1",
+                      fitFamily = "gaussian",
+                      fixedFactors = "HabitatComplexity",
+                      fixedTerms = list(CroplandIntensity=1),
+                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
+
+# Save model output 
+summary(Modelb$model)
+Model1bStats <- as.data.frame(Model1b$stats)
+Model1bStats
+tab_model(Modelb$model)
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Model1b$model)
+
+
+###------------------------------Total density----------------------------###
+###--------------Fish
+Model1c <- GLMERSelect(modelData = DataEuaFish1,
+                      responseVar = "FishDensity",
+                      fitFamily = "gaussian",
+                      fixedFactors = "HabitatComplexity",
+                      fixedTerms = list(CroplandIntensity=1),
+                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
+
+# Save model output 
+summary(Model1c$model)
+Model1cStats <- as.data.frame(Model1c$stats)
+Model1cStats
+tab_model(Model1c$model)
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Model1c$model)
+
+###--------------Insect
+Model1d <- GLMERSelect(modelData = DataEuaInsect1,
+                      responseVar = "InsectDensity",
+                      fitFamily = "gaussian",
+                      fixedFactors = "HabitatComplexity",
+                      fixedTerms = list(CroplandIntensity=1),
+                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
+
+# Save model output 
+summary(Model1d$model)
+Model1dStats <- as.data.frame(Model1d$stats)
+Model1dStats
+tab_model(Model1d$model)
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Model1d$model)
+
+
+#----------------------------Ecoregional Total beta-diversity LCBD---------------
+###--------------Fish 
+Model1e <- GLMERSelect(modelData = DataEuaFish1,
+                      responseVar = "LocalFishTotalLCBD",
+                      fitFamily = "gaussian",
+                      fixedFactors = "HabitatComplexity",
+                      fixedTerms = list(CroplandIntensity=1),
+                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
+
+# Save model output 
+summary(Model1e$model)
+Model1eStats <- as.data.frame(Model1e$stats)
+Model1eStats
+tab_model(Model1e$model)
+
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Model1e$model)
+
+###-------------Insect
+Model1f <- GLMERSelect(modelData = DataEuaInsect1,
+                      responseVar = "LocalInsectTotalLCBD",
+                      fitFamily = "gaussian",
+                      fixedFactors = "HabitatComplexity",
+                      fixedTerms = list(CroplandIntensity=1),
+                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,1)"))
+
+# Save model output 
+summary(Model1f$model)
+Model1fStats <- as.data.frame(Model1f$stats)
+Model1fStats
+
+
+## Only to plot effect
+Model1fb<-glmer(LocalInsectTotalLCBD ~ CroplandIntensity * HabitatComplexity +
+                 (1|Ecoregions)+(1|YEAR),
+               family = gaussian,
+               data=DataEuaInsect1)
+
+# Save model output 
+tab_model(Model1fb)
+
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Model1f$model)
+
+#----------------------------National Total beta-diversity LCBD---------------
+###--------------Fish 
+Model1g <- GLMERSelect(modelData = DataEuaFish1,
+                       responseVar = "RegionalFishTotalLBCD",
+                       fitFamily = "gaussian",
+                       fixedFactors = "HabitatComplexity",
+                       fixedTerms = list(CroplandIntensity=1),
+                       randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                       fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,1)"))
+
+# Save model output 
+Anova(Model1g$model)
+summary(Model1g$model)
+Model1gStats <- as.data.frame(Model1g$stats)
+Model1gStats
+
+## Only to plot effect
+Model1gb<-glmer(RegionalFishTotalLBCD ~ CroplandIntensity * HabitatComplexity +
+                  (1|Ecoregions)+(1|YEAR),
+                family = gaussian,
+                data=DataEuaFish1)
+
+# Save model output 
+tab_model(Model1gb)
+
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Modelg$model)
+
+###-------------Insect 
+Model1h <- GLMERSelect(modelData = DataEuaInsect1,
+                       responseVar = "RegionalInsectTotalLBCD",
+                       fitFamily = "gaussian",
+                       fixedFactors = "HabitatComplexity",
+                       fixedTerms = list(CroplandIntensity=1),
+                       randomStruct ="(1|Ecoregions)+(1|YEAR)",
+                       fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,1)"))
+
+# Save model output 
+summary(Model1h$model)
+Model1hStats <- as.data.frame(Model1h$stats)
+Model1hStats
+
+## Only to plot effect
+Model1hb<-glmer(RegionalInsectTotalLBCD ~ CroplandIntensity * HabitatComplexity +
+                  (1|Ecoregions)+(1|YEAR),
+                family = gaussian,
+                data=DataEuaInsect1)
+
+# Save model output 
+tab_model(Model1hb)
+
+# Check model assumptions
+Supplementary.Figure<-resid_panel(Model1h$model)
+
+
+# Create dataframe for values to predict response to richness, density, and LCBD of fish and insect 
+
+## ModelA - Fish Richness vs Cropland Intensification
+nd1a <- expand.grid(
+  CroplandIntensity=seq(from = min(Model1a$data$CroplandIntensity),to = max(Model1a$data$CroplandIntensity),
+                         length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1a$data$HabitatComplexity)))
+nd1a
+
+## ModelB - Insects Richness vs Cropland Intensification
+nd1b <- expand.grid(
+  CroplandIntensity=seq(from = min(Model1b$data$CroplandIntensity),to = max(Model1b$data$CroplandIntensity),
+                         length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1b$data$HabitatComplexity)))
+nd1b
+
+## ModelC - Fish Density vs Cropland Intensification
+nd1c <- expand.grid(
+  CroplandIntensity=seq(from = min(Model1c$data$CroplandIntensity),to = max(Model1c$data$CroplandIntensity),
+                         length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1c$data$HabitatComplexity)))
+nd1c
+
+## ModelD - Insects Density vs Cropland Intensification
+nd1d <- expand.grid(
+  CroplandIntensity=seq(from = min(Model1d$data$CroplandIntensity),to = max(Model1d$data$CroplandIntensity),
+                         length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1d$data$HabitatComplexity)))
+nd1d
+
+## ModelE - Fish Ecoregional LCBD vs Cropland Intensification
+nd1e <- expand.grid(
+  CroplandIntensity=seq(from = min(Model1e$data$CroplandIntensity),to = max(Model1e$data$CroplandIntensity),
+                         length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1e$data$HabitatComplexity)))
+nd1e
+
+## ModelF - Insects Ecoregional LCBD vs Cropland Intensification
+nd1f <- expand.grid(
+  CroplandIntensity=seq(from = min(Model1f$data$CroplandIntensity),to = max(Model1f$data$CroplandIntensity),
+                         length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1f$data$HabitatComplexity)))
+nd1f
+
+
+## ModelG - Fish National LCBD vs Cropland Intensification
+nd1g <-expand.grid(
+  CroplandIntensity=seq(from = min(Model1g$data$CroplandIntensity),to = max(Model1g$data$CroplandIntensity),
+                        length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1g$data$HabitatComplexity)))
+nd1g
+
+## ModelH - Insect National LCBD vs Cropland Intensification
+nd1h <- expand.grid(
+  CroplandIntensity=seq(from = min(Model1h$data$CroplandIntensity),to = max(Model1h$data$CroplandIntensity),
+                        length.out = 100),
+  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1h$data$HabitatComplexity)))
+nd1h
+
+### Defining diversity
+# Fish
+nd1a$Fish_RarefiedChaoRichness <- 0
+nd1b$Insect_RarefiedChaoRichness1 <- 0
+nd1c$FishDensity <- 0
+nd1d$InsectDensity <- 0
+nd1e$LocalFishTotalLCBD <- 0
+nd1f$LocalInsectTotalLCBD <- 0
+nd1g$RegionalFishTotalLBCD <- 0
+nd1h$RegionalInsectTotalLBCD <- 0
+
+## Creating the predictions for ModelA - Fish richness ~ Habitat complexity vs. Cropland intensification
+# adjust plot 1: mean anomaly and abundance
+QPVModel1a <- quantile(x = Model1a$data$CroplandIntensity[
+  Model1a$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1a <- quantile(x = Model1a$data$CroplandIntensity[
+  Model1a$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1a <- PredictGLMERRandIter(model = Model1a$model,data = nd1a)
+
+# back transform values
+a.preds.tmeanModel1a <- exp(a.preds.tmeanModel1a)-1
+a.preds.tmeanModel1a
+# convert to relative to reference
+a.preds.tmeanModel1a <- sweep(x = a.preds.tmeanModel1a, MARGIN = 2,STATS = a.preds.tmeanModel1a[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="High") & (nd1a$CroplandIntensity < QPVModel1a[1])),] <- NA
+a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="High") & (nd1a$CroplandIntensity > QPVModel1a[2])),] <- NA
+a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="Low") & (nd1a$CroplandIntensity < QALModel1a[1])),] <- NA
+a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="Low") & (nd1a$CroplandIntensity > QALModel1a[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1a$PredMedian <- ((apply(X = a.preds.tmeanModel1a, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1a$PredUpper <- ((apply(X = a.preds.tmeanModel1a, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1a$PredLower <- ((apply(X = a.preds.tmeanModel1a, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+
+## Creating the predictions for ModelB - Insects richness ~ Habitat complexity vs. Cropland intensification
+
+# adjust plot 1
+QPVModel1b <- quantile(x = Model1b$data$CroplandIntensity[
+  Model1b$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1b <- quantile(x = Model1b$data$CroplandIntensity[
+  Model1b$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1b <- PredictGLMERRandIter(model = Model1b$model,data = nd1b)
+
+# back transform values
+a.preds.tmeanModel1b <- exp(a.preds.tmeanModel1b)-1
+a.preds.tmeanModel1b
+# convert to relative to reference
+a.preds.tmeanModel1b <- sweep(x = a.preds.tmeanModel1b, MARGIN = 2,STATS = a.preds.tmeanModel1b[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="High") & (nd1b$CroplandIntensity < QPVModel1b[1])),] <- NA
+a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="High") & (nd1b$CroplandIntensity > QPVModel1b[2])),] <- NA
+a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="Low") & (nd1b$CroplandIntensity < QALModel1b[1])),] <- NA
+a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="Low") & (nd1b$CroplandIntensity > QALModel1b[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1b$PredMedian <- ((apply(X = a.preds.tmeanModel1b, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1b$PredUpper <- ((apply(X = a.preds.tmeanModel1b, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1b$PredLower <- ((apply(X = a.preds.tmeanModel1b, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+## Creating the predictions for ModelC - Fish density ~ Habitat complexity vs. Cropland intensification
+# adjust plot 1:
+QPVModel1c <- quantile(x = Model1c$data$CroplandIntensity[
+  Model1c$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1c <- quantile(x = Model1c$data$CroplandIntensity[
+  Model1c$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1c <- PredictGLMERRandIter(model = Model1c$model,data = nd1c)
+
+# back transform values
+a.preds.tmeanModel1c <- exp(a.preds.tmeanModel1c)-0.5
+a.preds.tmeanModel1c
+# convert to relative to reference
+a.preds.tmeanModel1c<- sweep(x = a.preds.tmeanModel1c, MARGIN = 2,STATS = a.preds.tmeanModel1c[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity < QPVModel1c[1])),] <- NA
+a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity > QPVModel1c[2])),] <- NA
+a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity < QALModel1c[1])),] <- NA
+a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity > QALModel1c[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1c$PredMedian <- ((apply(X = a.preds.tmeanModel1c, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1c$PredUpper <- ((apply(X = a.preds.tmeanModel1c, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1c$PredLower <- ((apply(X = a.preds.tmeanModel1c, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+
+## Creating the predictions for ModelD - Insect density ~ Habitat complexity vs. Cropland intensification
+# adjust plot 1: mean anomaly and abundance
+QPVModel1d <- quantile(x = Model1d$data$CroplandIntensity[
+  Model1d$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1d <- quantile(x = Model1d$data$CroplandIntensity[
+  Model1d$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1d <- PredictGLMERRandIter(model = Model1d$model,data = nd1d)
+
+# back transform values
+a.preds.tmeanModel1d <- exp(a.preds.tmeanModel1d)
+a.preds.tmeanModel1d
+# convert to relative to reference
+a.preds.tmeanModel1d<- sweep(x = a.preds.tmeanModel1d, MARGIN = 2,STATS = a.preds.tmeanModel1d[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity < QPVModel1d[1])),] <- NA
+a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity > QPVModel1d[2])),] <- NA
+a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity < QALModel1d[1])),] <- NA
+a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity > QALModel1d[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1d$PredMedian <- ((apply(X = a.preds.tmeanModel1d, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1d$PredUpper <- ((apply(X = a.preds.tmeanModel1d, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1d$PredLower <- ((apply(X = a.preds.tmeanModel1d, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+## Creating the predictions for ModelE - Fish Ecoregional LCBD ~ Habitat complexity vs. Cropland intensification
+# adjust plot 1: mean anomaly and abundance
+QPVModel1e <- quantile(x = Model1e$data$CroplandIntensity[
+  Model1e$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1e <- quantile(x = Model1e$data$CroplandIntensity[
+  Model1e$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1e <- PredictGLMERRandIter(model = Model1e$model,data = nd1e)
+
+# back transform values
+a.preds.tmeanModel1e <- exp(a.preds.tmeanModel1e)
+a.preds.tmeanModel1e
+# convert to relative to reference
+a.preds.tmeanModel1e<- sweep(x = a.preds.tmeanModel1e, MARGIN = 2,STATS = a.preds.tmeanModel1e[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="High") & (nd1e$CroplandIntensity < QPVModel1e[1])),] <- NA
+a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="High") & (nd1e$CroplandIntensity > QPVModel1e[2])),] <- NA
+a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="Low") & (nd1e$CroplandIntensity < QALModel1e[1])),] <- NA
+a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="Low") & (nd1e$CroplandIntensity > QALModel1e[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1e$PredMedian <- ((apply(X = a.preds.tmeanModel1e, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1e$PredUpper <- ((apply(X = a.preds.tmeanModel1e, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1e$PredLower <- ((apply(X = a.preds.tmeanModel1e, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+
+## Creating the predictions for ModelF - Insect Ecoregional LCBD ~ Habitat complexity vs. Cropland intensification
+# adjust plot 1: mean anomaly and abundance
+QPVModel1f <- quantile(x = Model1f$data$CroplandIntensity[
+  Model1f$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1f <- quantile(x = Model1f$data$CroplandIntensity[
+  Model1f$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1f <- PredictGLMERRandIter(model = Model1f$model,data = nd1f)
+
+# back transform values
+a.preds.tmeanModel1f <- exp(a.preds.tmeanModel1f)
+a.preds.tmeanModel1f
+# convert to relative to reference
+a.preds.tmeanModel1f<- sweep(x = a.preds.tmeanModel1f, MARGIN = 2,STATS = a.preds.tmeanModel1f[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="High") & (nd1f$CroplandIntensity < QPVModel1f[1])),] <- NA
+a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="High") & (nd1f$CroplandIntensity > QPVModel1f[2])),] <- NA
+a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="Low") & (nd1f$CroplandIntensity < QALModel1f[1])),] <- NA
+a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="Low") & (nd1f$CroplandIntensity > QALModel1f[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1f$PredMedian <- ((apply(X = a.preds.tmeanModel1f, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1f$PredUpper <- ((apply(X = a.preds.tmeanModel1f, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1f$PredLower <- ((apply(X = a.preds.tmeanModel1f, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+
+## Creating the predictions for ModelG - fish National LCBD ~ Habitat complexity vs. Cropland intensification
+# adjust plot 1: mean anomaly and abundance
+QPVModel1g <- quantile(x = Model1g$data$CroplandIntensity[
+  Model1g$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1g <- quantile(x = Model1g$data$CroplandIntensity[
+  Model1g$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1g <- PredictGLMERRandIter(model = Model1g$model,data = nd1g)
+
+# back transform values
+a.preds.tmeanModel1g <- exp(a.preds.tmeanModel1g)
+a.preds.tmeanModel1g
+# convert to relative to reference
+a.preds.tmeanModel1g<- sweep(x = a.preds.tmeanModel1g, MARGIN = 2,STATS = a.preds.tmeanModel1g[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="High") & (nd1g$CroplandIntensity < QPVModel1g[1])),] <- NA
+a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="High") & (nd1g$CroplandIntensity > QPVModel1g[2])),] <- NA
+a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="Low") & (nd1g$CroplandIntensity < QALModel1g[1])),] <- NA
+a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="Low") & (nd1g$CroplandIntensity > QALModel1g[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1g$PredMedian <- ((apply(X = a.preds.tmeanModel1g, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1g$PredUpper <- ((apply(X = a.preds.tmeanModel1g, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1g$PredLower <- ((apply(X = a.preds.tmeanModel1g, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+
+## Creating the predictions for ModelH - Insect National LCBD ~ Habitat complexity vs. Cropland intensification
+# adjust plot 1: mean anomaly and abundance
+QPVModel1h <- quantile(x = Model1h$data$CroplandIntensity[
+  Model1h$data$HabitatComplexity=="High"],probs = exclQuantiles)
+QALModel1h <- quantile(x = Model1h$data$CroplandIntensity[
+  Model1h$data$HabitatComplexity=="Low"],probs = exclQuantiles)
+
+# predict the results
+a.preds.tmeanModel1h <- PredictGLMERRandIter(model = Model1h$model,data = nd1h)
+
+# back transform values
+a.preds.tmeanModel1h <- exp(a.preds.tmeanModel1h)
+a.preds.tmeanModel1h
+# convert to relative to reference
+a.preds.tmeanModel1h<- sweep(x = a.preds.tmeanModel1h, MARGIN = 2,STATS = a.preds.tmeanModel1h[1,],FUN = '/')
+
+# remove anything above and below the quantiles
+a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="High") & (nd1h$CroplandIntensity < QPVModel1h[1])),] <- NA
+a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="High") & (nd1h$CroplandIntensity > QPVModel1h[2])),] <- NA
+a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="Low") & (nd1h$CroplandIntensity < QALModel1h[1])),] <- NA
+a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="Low") & (nd1h$CroplandIntensity > QALModel1h[2])),] <- NA
+
+# Get the median, upper and lower quants for the plot
+nd1h$PredMedian <- ((apply(X = a.preds.tmeanModel1h, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
+nd1h$PredUpper <- ((apply(X = a.preds.tmeanModel1h, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
+nd1h$PredLower <- ((apply(X = a.preds.tmeanModel1h, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
+
+# set factor levels
+nd1a$HabitatComplexity <- factor(nd1a$HabitatComplexity, levels = c("High","Low"))
+nd1b$HabitatComplexity <- factor(nd1b$HabitatComplexity, levels = c("High","Low"))
+nd1c$HabitatComplexity <- factor(nd1c$HabitatComplexity, levels = c("High","Low"))
+nd1d$HabitatComplexity <- factor(nd1d$HabitatComplexity, levels = c("High","Low"))
+nd1e$HabitatComplexity <- factor(nd1e$HabitatComplexity, levels = c("High","Low"))
+nd1f$HabitatComplexity <- factor(nd1f$HabitatComplexity, levels = c("High","Low"))
+nd1g$HabitatComplexity <- factor(nd1g$HabitatComplexity, levels = c("High","Low"))
+nd1h$HabitatComplexity <- factor(nd1h$HabitatComplexity, levels = c("High","Low"))
+
+###%######################################################%##
+#                                                          #
+####          plot richness, density, and LCBD            ####
+#    Figure 3 in the main manuscript (A-H)                 #
+##%######################################################%##
+
+# ---------------------------Fish richness vs. Urban Intensification
+Fig1a <- ggplot(data = nd1a, aes(x = CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 0.75) +
+  geom_ribbon(aes(ymin = nd1a$PredLower, ymax = nd1a$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in taxa richness (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+ # ylim(c(-60,60)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("a")
+Fig1a
+
+# -----------------------Insect richness vs. Urban Intensification
+Fig1b <- ggplot(data = nd1b, aes(x = CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 1) +
+  geom_ribbon(aes(ymin = nd1b$PredLower, ymax = nd1b$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in taxa richness (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+  #ylim(c(-60,60)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("B")
+Fig1b
+
+# ---------------------------Fish Density vs. Urban Intensification
+Fig1c <- ggplot(data = nd1c,  aes(x =CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 0.75) +
+  geom_ribbon(aes(ymin = nd1c$PredLower, ymax = nd1c$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in total density  (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+  #ylim(c(-100,80)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("C")
+Fig1c
+
+# ------------------------Insects density vs. Urban Intensification
+Fig1d <- ggplot(data = nd1d, aes(x = CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 0.75) +
+  geom_ribbon(aes(ymin = nd1d$PredLower, ymax = nd1d$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in total density  (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+  # ylim(c(-100,100)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("D")
+Fig1d
+
+# ----------------------Fish Ecoregional LCBD vs. Urban Intensification
+Fig1e <- ggplot(data = nd1e, aes(x = CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 1) +
+  geom_ribbon(aes(ymin = nd1e$PredLower, ymax = nd1e$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in ecoregional LCBD (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+  #ylim(c(-60,60)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("E")
+Fig1e
+
+
+# ----------------------------Insect Ecoregional LCBD vs. Urban Intensification
+Fig1f <- ggplot(data = nd1f, aes(x = CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 1) +
+  geom_ribbon(aes(ymin = nd1f$PredLower, ymax = nd1f$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in ecoregional LCBD (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+ # ylim(c(-60,60)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("F")
+Fig1f
+
+
+# -----------------------Fish National LCBD vs. Urban Intensification
+Fig1g <- ggplot(data = nd1g, aes(x = CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 1) +
+  geom_ribbon(aes(ymin = nd1g$PredLower, ymax = nd1g$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in national LCBD (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+  # ylim(c(-60,60)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("G")
+Fig1g
+
+
+# --------------------------Insect National LCBD vs. Urban Intensification
+Fig1h <- ggplot(data = nd1h, aes(x = CroplandIntensity, y = PredMedian)) + 
+  geom_line(aes(col = HabitatComplexity), size = 1) +
+  geom_ribbon(aes(ymin = nd1h$PredLower, ymax = nd1h$PredUpper, 
+                  fill = HabitatComplexity), alpha = 0.1) +
+  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
+  scale_fill_manual(values = c("#0072B2","#D55E00")) +
+  scale_colour_manual(values = c("#0072B2","#D55E00")) +
+  theme_bw() + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
+  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
+  ylab("Change in national LCBD (%)") +
+  xlab("Cropland intensification") +
+  #xlim(c(-1, 5)) +
+  # ylim(c(-60,60)) +  
+  theme_light(base_size = 18)+
+  theme(legend.position = "none",
+        title = element_text(size = 14, face = "bold"),
+        axis.text.y = element_text(size =16),
+        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
+        axis.text = element_text(size =18, colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1.1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.border = element_blank(), 
+        panel.background = element_blank(), 
+        #   axis.ticks = element_line(size = 0.4), 
+        axis.line = element_line(size = 0.4)) +
+  theme(axis.ticks.length=unit(0.14,"inch"))+
+  ggtitle("H")
+Fig1h
+
+
+
+
+
+
+
