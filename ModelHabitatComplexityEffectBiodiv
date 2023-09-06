@@ -419,7 +419,6 @@ Fig1a <- ggplot(data = RichnessGroups) +
         axis.line = element_line(size = 0.4)) +
   theme(axis.ticks.length=unit(0.14,"inch"))+
   ggtitle("b")
-Fig1a
 
 ## Total density
 Fig1b <- ggplot(data = AbundanceGroups) +
@@ -449,7 +448,6 @@ Fig1b <- ggplot(data = AbundanceGroups) +
         axis.line = element_line(size = 0.4)) +
   theme(axis.ticks.length=unit(0.14,"inch"))+
   ggtitle("c")
-Fig1b
 
 ## Local LCBD
 Fig1c <- ggplot(data =LCBDGroups) +
@@ -479,7 +477,6 @@ Fig1c <- ggplot(data =LCBDGroups) +
         axis.line = element_line(size = 0.4)) +
   theme(axis.ticks.length=unit(0.14,"inch"))+
   ggtitle("d")
-Fig1c
 
 ## National LCBD
 Fig1d <- ggplot(data =RegLCBDGroups) +
@@ -509,7 +506,6 @@ Fig1d <- ggplot(data =RegLCBDGroups) +
         axis.line = element_line(size = 0.4)) +
   theme(axis.ticks.length=unit(0.14,"inch"))+
   ggtitle("e")
-Fig1d
 
 
 
