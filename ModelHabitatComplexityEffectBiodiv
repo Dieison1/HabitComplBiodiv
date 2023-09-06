@@ -12,14 +12,21 @@ library(StatisticalModels)
 library(factoextra)
 library(ggResidpanel)
 
-# The database for the analysis can be downloaded at: 
-https://www.epa.gov/national-aquatic-resource-surveys/data-national-aquatic-resource-surveys 
-https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset.  
+# Load dataset
+### Fish
+DataEuaFish<-read.csv(".FishDataSet.csv", header = TRUE, sep = ";")
+DataEuaFish
+
+### Insects
+DataEuaInsect<-read.csv(".InsectDataSet.csv" header = TRUE, sep = ";")
+DataEuaInsect
+
+
 
 ## Remove NAs in the specified columns
 ##-----------------------------------------Fish dataset--------------------------------------------------------##
-DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions',' YEAR', 'HabitatComplexity', "XFC_NAT",
-                               'LAT_DD83', 'LON_DD83','FishDensity','Fish_RarefiedChaoRichness','ObservedFishRichness',
+DataEuaFish1 <- na.omit(DataEuaFish[,c('Ecoregions',' YEAR', 'HabitatComplexity',
+                               'FishDensity','Fish_RarefiedChaoRichness','ObservedFishRichness',
                                'LocalFishTotalLCBD', 'LocalFishReplLCBD', 'LocalFishRichLCBD',
                                'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD')])
 
@@ -32,7 +39,7 @@ print(table(DataEuaFish1$HabitatComplexity1))
 ## Log-transforming density
 DataEuaFish1$FishDensity<-log10(DataEuaFish1$FishDensity)
 
-### We will scale diversity metrics in maximum and minumum values to put slopes at a similar
+### We will scale diversity metrics in maximum and minimum values to put slopes at a similar
 
 ##*1000 transform local and regional LCBD
 DataEuaFish1$LocalFishTotalLCBD<-(asin(sqrt(DataEuaFish1$LocalFishTotalLCBD)))*100
@@ -46,7 +53,7 @@ DataEuaFish1$RegionalFishRichLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishRichLBCD)
 
 ##----------------------------------------Insect dataset--------------------------------------------------------##
 ## Remove NAs in the specified columns
-DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions','YEAR','HabitatComplexity'',"XFC_NAT",
+DataEuaInsect1 <- na.omit(DataEuaInsect[,c('Ecoregions', 'YEAR', 'HabitatComplexity'',
                                           'InsectDensity', 'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
                                            'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
                                            'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD')])
