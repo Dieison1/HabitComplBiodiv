@@ -14,13 +14,21 @@ library(factoextra)
 library(ggResidpanel)
 
 # Dataset 
-The data to run this analysis can be downloaded at: 
+# Load dataset
+### Fish
+DataEuaFish<-read.csv(".FishDataSet.csv", header = TRUE, sep = ";")
+DataEuaFish
+
+### Insects
+DataEuaInsect<-read.csv(".InsectDataSet.csv" header = TRUE, sep = ";")
+DataEuaInsect
+
 
 #############################################################################################################
 ## Remove NAs in the specified columns
 #----------------------------------------------Fish dataset--------------------------------------------------##
-DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions', 'YEAR', 'HabitatComplexity', "XFC_NAT",
-                               'LAT_DD83', 'LON_DD83', 'FishDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
+DataEuaFish1 <- na.omit(DataEuaFish[,c('Ecoregions', 'YEAR', 'HabitatComplexity',
+                               'FishDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
                                'LocalFishTotalLCBD', 'LocalFishReplLCBD', 'LocalFishRichLCBD',
                                'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
                                'CroplandIntensity')])
@@ -45,8 +53,8 @@ DataEuaFish1$RegionalFishReplLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishReplLBCD)
 DataEuaFish1$RegionalFishRichLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishRichLBCD)))*1000
 
 #----------------------------------------------Fish dataset--------------------------------------------------##
-DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions',' YEAR', 'HabitatComplexity', "XFC_NAT",
-                                          'InsectDensity', 'Insect_RarefiedChaoRichness','ObservedInsectRichness',
+DataEuaInsect1 <- na.omit(DataEuaInsect[,c('Ecoregions',' YEAR', 'HabitatComplexity', 
+                                          'InsectDensity', 'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
                                            'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
                                            'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD',
                                             'CroplandIntensity')])
