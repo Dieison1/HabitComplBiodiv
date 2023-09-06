@@ -18,7 +18,7 @@ https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset.
 
 ## Remove NAs in the specified columns
 ##-----------------------------------------Fish dataset--------------------------------------------------------##
-DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions','YEAR', 'HabitatComplexity', "XFC_NAT",
+DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions',' YEAR', 'HabitatComplexity', "XFC_NAT",
                                'LAT_DD83', 'LON_DD83','FishDensity','Fish_RarefiedChaoRichness','ObservedFishRichness',
                                'LocalFishTotalLCBD', 'LocalFishReplLCBD', 'LocalFishRichLCBD',
                                'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD')])
