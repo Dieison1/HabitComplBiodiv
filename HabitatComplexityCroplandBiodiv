@@ -34,7 +34,6 @@ print(table(DataEuaFish1$HabitatComplexity1))
 ## Log-transforming density
 DataEuaFish1$FishDensity<-log10(DataEuaFish1$FishDensity)
 
-### We will scale diversity metrics in maximum and minumum values to put slopes at a similar
 
 ##*1000 transform local and regional LCBD
 DataEuaFish1$LocalFishTotalLCBD<-(asin(sqrt(DataEuaFish1$LocalFishTotalLCBD)))*100
