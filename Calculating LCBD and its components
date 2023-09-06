@@ -18,6 +18,12 @@ library(xlsx)
 library(prabclus)
 
 
+# Load dataset
+The raw data used to create the LCBD index can be downloaded at: 
+https://www.epa.gov/national-aquatic-resource-surveys/data-national-aquatic-resource-surveys) 
+StreamCat Dataset (https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset
+
+
  # First, let's estimate the regional LCBD (including all streams, but separating by years)
 ##Separating By years
 # 2008
