@@ -1,22 +1,17 @@
-# In this document, we will analyze the interactive effect between habitat complexity (High vs Low) and Cropland intensification on biodiversity 
+# In this document, we will analyze the interactive effect between habitat complexity and Urban and Cropland intensification on biodiversity 
 
 ## Load packages
-library(ggplot2)
-library(gridExtra)
-library(grid)
+library(tidyverse)
+library("factoextra")
+library(nlme)
 library(car)
 library(MASS)
-library(lme4)
-library(MResModelling)
 library(sjPlot)
-library(StatisticalModels)
-library(factoextra)
-library(ggResidpanel)
 
 # Dataset 
 # Load dataset
 ### Fish
-DataEuaFish<-read.csv(".FishDataSet.csv", header = TRUE, sep = ";")
+DataEuaFish<-read.csv(".FishDataShare.csv", header = TRUE, sep = ";")
 DataEuaFish
 
 ### Insects
@@ -24,33 +19,135 @@ DataEuaInsect<-read.csv(".InsectDataSet.csv" header = TRUE, sep = ";")
 DataEuaInsect
 
 
+
 #############################################################################################################
 ## Remove NAs in the specified columns
 #----------------------------------------------Fish dataset--------------------------------------------------##
-DataEuaFish1 <- na.omit(DataEuaFish[,c('Ecoregions', 'YEAR', 'HabitatComplexity',
-                               'FishDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
-                               'LocalFishTotalLCBD', 'LocalFishReplLCBD', 'LocalFishRichLCBD',
-                               'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
-                               'CroplandIntensity')])
+## First, we will create an Urban-intensity index, using the PCA method:
+#  For this, we will use four human activity variables: 
+# (i)  Human population
+# (ii) Anthropogenic Imperviousness Surface
+# (iii) Roads density
+# (iv)  High-human land-use intensity
 
-# look at the spread of habitat Complexity/categories
-print(table(DataEuaFish1$HabitatComplexity1))
+## Standardizing predictors using Log transforming:
+DataEuaFish$RoadsDensity<-log(DataEuaFish$RoadsDensity+1)
+DataEuaFish$DensidadePopulational<-log(DataEuaFish$DensidadePopulational+1)
+DataEuaFish$HighIntensiveLandUse<-log(DataEuaFish$HighIntensiveLandUse+1)
+DataEuaFish$AnthropogenicImperviousnessSufaces<-log(DataEuaFish$AnthropogenicImperviousnessSufaces+1)
+## Merging Urban-activities variables
+UrbanActivitiesVariables_Fish<-DataEuaFish   %>%
+  dplyr::select(HighIntensiveLandUse, 
+                AnthropogenicImperviousnessSufaces,
+                RoadsDensity,
+                DensidadePopulational)
+UrbanActivitiesVariables_Fish
+PCASUrbanActivitiesVariables_Fish<-prcomp(UrbanActivitiesVariables_Fish[c(1:4)],center = T, scale. = T, rank. = 3)
+summary(PCASUrbanActivitiesVariables_Fish) # The PCA1 axis accounted for 84% of the variation in the urban stream variables
+## Looking at the correlation between the variables and the first axis of the PCA
+# PC1 vs HighIntensiveLandUse = 0.4851342
+# PC1 vs AnthropogenicImperviousnessSufaces = 0.5290173
+# PC1 vs RoadsDensity  = 0.4892229
+# PC1 vs DensidadePopulational  = 0.4954256
+# Plotting variable in the PCA axis
+PlotUrbanActivitiesVariables_Fish<-fviz_pca_biplot(PCASUrbanActivitiesVariables_Fish,
+                                                   # habillage=CASUrbanActivitiesVariables_Fish$HabitatComplexity,
+                                                   repel = TRUE,geom = "none", 
+                                                   col.var = "#2E9FDF", # Variables color
+                                                   col.ind = "#696969",
+                                                   pointsize = 0,
+                                                   alpha.ind=0.4
+)+ scale_x_continuous(breaks = c(-4,-2,-0, 2,4,8), limits = c(-3,8))+
+  scale_y_continuous(breaks = c(-4,-2,-0, 2,4), limits = c(-3,4)) 
 
-# High-habitat Complexity        Low-habitat complexity
-         #1772                        #1780
+#####PC1 is positively correlated with all urbanization variables, so we will use the PC1 axis as a proxy for urban intensification in subsequent analyses
 
-## Log-transforming density
-DataEuaFish1$FishDensity<-log10(DataEuaFish1$FishDensity)
+## Extracting PCI axis for further analysis
+Axis_UrbanActivitiesVariables_Fish<-predict(PCASUrbanActivitiesVariables_Fish,UrbanActivitiesVariables_Fish)
+UrbanActivityIndex_Fish<-as.data.frame(Axis_UrbanActivitiesVariables_Fish)
+DataEuaFish$UrbanActivityIndex<-UrbanActivityIndex_Fish$PC1
+
+## remove NAs in the specified columns
+DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions', 'YEAR', 'SDDEPTH_CM',
+                                      'SumNat_PFC', 'XFC_NAT_ALG_AQM',
+                                       'FishTotalDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
+                                       'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
+                                       'InvasiveFishDensity', 'RatioInvasiveDensity', 'RiparianPresent', 'CatchmentsArea',
+                                       'MeanAnnualTemperature', 'MeanPrecipitation',
+                                       'UrbanActivityIndex', 'CroplandIntensity')])
+#Log-transforming drivers
+DataEuaFish1$CatchmentsArea<-log10(DataEuaFish1$CatchmentsArea+1)
+DataEuaFish1$SDDEPTH_CM<-log10(DataEuaFish1$SDDEPTH_CM+0.1)
+DataEuaFish1$SumNat_PFC<-log10(DataEuaFish1$SumNat_PFC+1)
+DataEuaFish1$XFC_NAT_ALG_AQM<-log10(DataEuaFish1$XFC_NAT_ALG_AQM+1)
 
 
-##*1000 transform local and regional LCBD
-DataEuaFish1$LocalFishTotalLCBD<-(asin(sqrt(DataEuaFish1$LocalFishTotalLCBD)))*100
-DataEuaFish1$LocalFishReplLCBD<-(asin(sqrt(DataEuaFish1$LocalFishReplLCBD)))*100
-DataEuaFish1$LocalFishRichLCBD<-(asin(sqrt(DataEuaFish1$LocalFishRichLCBD)))*100
+#----------------------------------------------Insect dataset--------------------------------------------------##
+## First, we will create an Urban-intensity index, using the PCA method:
+#  For this, we will use four human activity variables: 
+# (i)  Human population
+# (ii) Anthropogenic Imperviousness Surface
+# (iii) Roads density
+# (iv)  High-human land-use intensity
 
-DataEuaFish1$RegionalFishTotalLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishTotalLBCD)))*1000
-DataEuaFish1$RegionalFishReplLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishReplLBCD)))*1000
-DataEuaFish1$RegionalFishRichLBCD<-(asin(sqrt(DataEuaFish1$RegionalFishRichLBCD)))*1000
+## Standardizing predictors using Log transforming:
+DataEuaInsect$RoadsDensity<-log(DataEuaFish$RoadsDensity+1)
+DataEuaInsect$DensidadePopulational<-log(DataEuaFish$DensidadePopulational+1)
+DataEuaFish$HighIntensiveLandUse<-log(DataEuaFish$HighIntensiveLandUse+1)
+DataEuaFish$AnthropogenicImperviousnessSufaces<-log(DataEuaFish$AnthropogenicImperviousnessSufaces+1)
+## Merging Urban-activities variables
+UrbanActivitiesVariables_Fish<-DataEuaFish   %>%
+  dplyr::select(HighIntensiveLandUse, 
+                AnthropogenicImperviousnessSufaces,
+                RoadsDensity,
+                DensidadePopulational)
+UrbanActivitiesVariables_Fish
+PCASUrbanActivitiesVariables_Fish<-prcomp(UrbanActivitiesVariables_Fish[c(1:4)],center = T, scale. = T, rank. = 3)
+summary(PCASUrbanActivitiesVariables_Fish) # The PCA1 axis accounted for 84% of the variation in the urban stream variables
+## Looking at the correlation between the variables and the first axis of the PCA
+# PC1 vs HighIntensiveLandUse = 0.4851342
+# PC1 vs AnthropogenicImperviousnessSufaces = 0.5290173
+# PC1 vs RoadsDensity  = 0.4892229
+# PC1 vs DensidadePopulational  = 0.4954256
+# Plotting variable in the PCA axis
+PlotUrbanActivitiesVariables_Fish<-fviz_pca_biplot(PCASUrbanActivitiesVariables_Fish,
+                                                   # habillage=CASUrbanActivitiesVariables_Fish$HabitatComplexity,
+                                                   repel = TRUE,geom = "none", 
+                                                   col.var = "#2E9FDF", # Variables color
+                                                   col.ind = "#696969",
+                                                   pointsize = 0,
+                                                   alpha.ind=0.4
+)+ scale_x_continuous(breaks = c(-4,-2,-0, 2,4,8), limits = c(-3,8))+
+  scale_y_continuous(breaks = c(-4,-2,-0, 2,4), limits = c(-3,4)) 
+
+#####PC1 is positively correlated with all urbanization variables, so we will use the PC1 axis as a proxy for urban intensification in subsequent analyses
+
+## Extracting PCI axis for further analysis
+Axis_UrbanActivitiesVariables_Fish<-predict(PCASUrbanActivitiesVariables_Fish,UrbanActivitiesVariables_Fish)
+UrbanActivityIndex_Fish<-as.data.frame(Axis_UrbanActivitiesVariables_Fish)
+DataEuaFish$UrbanActivityIndex<-UrbanActivityIndex_Fish$PC1
+
+## remove NAs in the specified columns
+DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions', 'YEAR', 'SDDEPTH_CM',
+                                      'SumNat_PFC', 'XFC_NAT_ALG_AQM',
+                                       'FishTotalDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
+                                       'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
+                                       'InvasiveFishDensity', 'RatioInvasiveDensity', 'RiparianPresent', 'CatchmentsArea',
+                                       'MeanAnnualTemperature', 'MeanPrecipitation',
+                                       'UrbanActivityIndex', 'CroplandIntensity')])
+#Log-transforming drivers
+DataEuaFish1$CatchmentsArea<-log10(DataEuaFish1$CatchmentsArea+1)
+DataEuaFish1$SDDEPTH_CM<-log10(DataEuaFish1$SDDEPTH_CM+0.1)
+DataEuaFish1$SumNat_PFC<-log10(DataEuaFish1$SumNat_PFC+1)
+DataEuaFish1$XFC_NAT_ALG_AQM<-log10(DataEuaFish1$XFC_NAT_ALG_AQM+1)
+
+
+
+
+
+
+
+
 
 #----------------------------------------------Fish dataset--------------------------------------------------##
 DataEuaInsect1 <- na.omit(DataEuaInsect[,c('Ecoregions',' YEAR', 'HabitatComplexity', 
@@ -58,23 +155,6 @@ DataEuaInsect1 <- na.omit(DataEuaInsect[,c('Ecoregions',' YEAR', 'HabitatComplex
                                            'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
                                            'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD',
                                             'CroplandIntensity')])
-
-# Look at the spread of habitat complexity/categories
-print(table(DataEuaInsect$HabitatComplexity1))
-
-# High-habitat complexity     Low-habitat complexity
-          #2049                          #2044  
-
-## Log-transforming fish density metrics
-DataEuaInsect1$InsectDensity<-log(DataEuaInsect1$InsectDensity+0.1)
-##*1000 transform local and regional LCBD
-DataEuaInsect1$LocalInsectTotalLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectTotalLCBD)))*100
-DataEuaInsect1$LocalInsectReplLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectReplLCBD)))*100
-DataEuaInsect1$LocalInsectRichLCBD<-(asin(sqrt(DataEuaInsect1$LocalInsectRichLCBD)))*100
-
-DataEuaInsect1$RegionalInsectTotalLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectTotalLBCD)))*1000
-DataEuaInsect1$RegionalInsectReplLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectReplLBCD)))*1000
-DataEuaInsect1$RegionalInsectRichLBCD<-(asin(sqrt(DataEuaInsect1$RegionalInsectRichLBCD)))*1000
 
 
 
