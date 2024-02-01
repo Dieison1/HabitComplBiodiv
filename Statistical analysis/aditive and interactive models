@@ -15,7 +15,7 @@ DataEuaFish<-read.csv(".FishDataShare.csv", header = TRUE, sep = ";")
 DataEuaFish
 
 ### Insects
-DataEuaInsect<-read.csv(".InsectDataSet.csv" header = TRUE, sep = ";")
+DataEuaInsect<-read.csv(".InsectDataShare.csv" header = TRUE, sep = ";")
 DataEuaInsect
 
 
