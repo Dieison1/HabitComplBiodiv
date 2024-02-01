@@ -19,7 +19,6 @@ DataEuaInsect<-read.csv(".InsectDataSet.csv" header = TRUE, sep = ";")
 DataEuaInsect
 
 
-
 #############################################################################################################
 ## Remove NAs in the specified columns
 #----------------------------------------------Fish dataset--------------------------------------------------##
@@ -51,7 +50,6 @@ summary(PCASUrbanActivitiesVariables_Fish) # The PCA1 axis accounted for 84% of 
 # PC1 vs DensidadePopulational  = 0.4954256
 # Plotting variable in the PCA axis
 PlotUrbanActivitiesVariables_Fish<-fviz_pca_biplot(PCASUrbanActivitiesVariables_Fish,
-                                                   # habillage=CASUrbanActivitiesVariables_Fish$HabitatComplexity,
                                                    repel = TRUE,geom = "none", 
                                                    col.var = "#2E9FDF", # Variables color
                                                    col.ind = "#696969",
@@ -91,27 +89,28 @@ DataEuaFish1$XFC_NAT_ALG_AQM<-log10(DataEuaFish1$XFC_NAT_ALG_AQM+1)
 # (iv)  High-human land-use intensity
 
 ## Standardizing predictors using Log transforming:
-DataEuaInsect$RoadsDensity<-log(DataEuaFish$RoadsDensity+1)
-DataEuaInsect$DensidadePopulational<-log(DataEuaFish$DensidadePopulational+1)
-DataEuaFish$HighIntensiveLandUse<-log(DataEuaFish$HighIntensiveLandUse+1)
-DataEuaFish$AnthropogenicImperviousnessSufaces<-log(DataEuaFish$AnthropogenicImperviousnessSufaces+1)
+DataEuaInsect$RoadsDensity<-log(DataEuaInsect$RoadsDensity+1)
+DataEuaInsect$DensidadePopulational<-log(DataEuaInsect$DensidadePopulational+1)
+DataEuaInsect$HighIntensiveLandUse<-log(DataEuaInsect$HighIntensiveLandUse+1)
+DataEuaInsect$AnthropogenicImperviousnessSufaces<-log(DataEuaInsect$AnthropogenicImperviousnessSufaces+1)
 ## Merging Urban-activities variables
-UrbanActivitiesVariables_Fish<-DataEuaFish   %>%
+UrbanActivitiesVariables_Insect<-DataEuaInsect   %>%
   dplyr::select(HighIntensiveLandUse, 
                 AnthropogenicImperviousnessSufaces,
                 RoadsDensity,
                 DensidadePopulational)
-UrbanActivitiesVariables_Fish
-PCASUrbanActivitiesVariables_Fish<-prcomp(UrbanActivitiesVariables_Fish[c(1:4)],center = T, scale. = T, rank. = 3)
-summary(PCASUrbanActivitiesVariables_Fish) # The PCA1 axis accounted for 84% of the variation in the urban stream variables
+UrbanActivitiesVariables_Insect
+PCASUrbanActivitiesVariables_Insect<-prcomp(UrbanActivitiesVariables_Insect[c(1:4)],center = T, scale. = T, rank. = 3)
+summary(PCASUrbanActivitiesVariables_Insect) # The PCA1 axis accounted for 84% of the variation in the urban stream variables
+PCASUrbanActivitiesVariables_Insect
+
 ## Looking at the correlation between the variables and the first axis of the PCA
-# PC1 vs HighIntensiveLandUse = 0.4851342
-# PC1 vs AnthropogenicImperviousnessSufaces = 0.5290173
-# PC1 vs RoadsDensity  = 0.4892229
-# PC1 vs DensidadePopulational  = 0.4954256
+# PC1 vs HighIntensiveLandUse = 0.4832675
+# PC1 vs AnthropogenicImperviousnessSufaces = 0.5307848
+# PC1 vs RoadsDensity  = 0.4877387
+# PC1 vs DensidadePopulational  = 0.4968208
 # Plotting variable in the PCA axis
-PlotUrbanActivitiesVariables_Fish<-fviz_pca_biplot(PCASUrbanActivitiesVariables_Fish,
-                                                   # habillage=CASUrbanActivitiesVariables_Fish$HabitatComplexity,
+PlotUrbanActivitiesVariables_Insect<-fviz_pca_biplot(PCASUrbanActivitiesVariables_Insect,
                                                    repel = TRUE,geom = "none", 
                                                    col.var = "#2E9FDF", # Variables color
                                                    col.ind = "#696969",
@@ -123,793 +122,1381 @@ PlotUrbanActivitiesVariables_Fish<-fviz_pca_biplot(PCASUrbanActivitiesVariables_
 #####PC1 is positively correlated with all urbanization variables, so we will use the PC1 axis as a proxy for urban intensification in subsequent analyses
 
 ## Extracting PCI axis for further analysis
-Axis_UrbanActivitiesVariables_Fish<-predict(PCASUrbanActivitiesVariables_Fish,UrbanActivitiesVariables_Fish)
-UrbanActivityIndex_Fish<-as.data.frame(Axis_UrbanActivitiesVariables_Fish)
-DataEuaFish$UrbanActivityIndex<-UrbanActivityIndex_Fish$PC1
+Axis_UrbanActivitiesVariables_Insect<-predict(PCASUrbanActivitiesVariables_Insect,UrbanActivitiesVariables_Insect)
+UrbanActivityIndex_Insect<-as.data.frame(Axis_UrbanActivitiesVariables_Insect)
+DataEuaInsect$UrbanActivityIndex<-UrbanActivityIndex_Insect$PC1
 
 ## remove NAs in the specified columns
-DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions', 'YEAR', 'SDDEPTH_CM',
-                                      'SumNat_PFC', 'XFC_NAT_ALG_AQM',
-                                       'FishTotalDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
-                                       'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
-                                       'InvasiveFishDensity', 'RatioInvasiveDensity', 'RiparianPresent', 'CatchmentsArea',
-                                       'MeanAnnualTemperature', 'MeanPrecipitation',
-                                       'UrbanActivityIndex', 'CroplandIntensity')])
-#Log-transforming drivers
-DataEuaFish1$CatchmentsArea<-log10(DataEuaFish1$CatchmentsArea+1)
-DataEuaFish1$SDDEPTH_CM<-log10(DataEuaFish1$SDDEPTH_CM+0.1)
-DataEuaFish1$SumNat_PFC<-log10(DataEuaFish1$SumNat_PFC+1)
-DataEuaFish1$XFC_NAT_ALG_AQM<-log10(DataEuaFish1$XFC_NAT_ALG_AQM+1)
-
-
-
-
-
-
-
-
-
-#----------------------------------------------Fish dataset--------------------------------------------------##
-DataEuaInsect1 <- na.omit(DataEuaInsect[,c('Ecoregions',' YEAR', 'HabitatComplexity', 
-                                          'InsectDensity', 'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
-                                           'LocalInsectTotalLCBD', 'LocalInsectReplLCBD', 'LocalInsectRichLCBD',
+DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions', 'YEAR', 'SDDEPTH_CM',
+                                           'XFC_NAT_ALG_AQM', 'SumNat_PFC',
+                                           'InsectDensity',  'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
                                            'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD',
-                                            'CroplandIntensity')])
+                                            'RiparianPresent', 'CatchmentsArea', 'MeanAnnualTemperature', 'MeanPrecipitation',
+                                           'UrbanActivityIndex', 'CroplandIntensity')])
+#Log-transforming drivers
+DataEuaInsect1$CatchmentsArea<-log10(DataEuaInsect1$CatchmentsArea+1)
+DataEuaInsect1$SDDEPTH_CM<-log10(DataEuaInsect1$SDDEPTH_CM+0.1)
+DataEuaInsect1$XFC_NAT_ALG_AQM<-log10(DataEuaInsect1$XFC_NAT_ALG_AQM+1)
+DataEuaInsect1$SumNat_PFC<-log10(DataEuaInsect1$SumNat_PFC+1)
 
 
+##################################################################################################################
+#We will apply mixed effect models for richness, density, and LCBD of fish and insects
+# drivers: habitat heterogeneity and cover + urban + cropland intensification + temperature + precipitation + RiparianPresent + stream depth and CatchmentsArea 
+###Additive models
+#------------------------Fish richness------------------------------#
+Model1<-lme(sqrt(ObservedFishRichness) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM + 
+            I(UrbanActivityIndex^2) + 
+            I(CroplandIntensity^2) + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1|YEAR/Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR)),
+            na.action = "na.fail",
+            data = DataEuaFish1)
 
-##################################################################################################################################################
-### Now, we will analyze the role of habitat complexity (High vs. Low) in buffering the impacts of Cropland intensification on the biodiversity
-
-###------------------------------ Species richness-----------------------------###
-## Species Richness vs Cropland Intensification
-# Log-transforming rarefied richness
-DataEuaFish1$Fish_RarefiedChaoRichness1<-log(DataEuaFish1$Fish_RarefiedChaoRichness)
-DataEuaInsect1$Insect_RarefiedChaoRichness1<-log(DataEuaInsect1$Insect_RarefiedChaoRichness)
-
-###--------------Fish
-Model1a <- GLMERSelect(modelData = DataEuaFish1,
-                      responseVar = "Fish_RarefiedChaoRichness",
-                      fitFamily = "poisson",
-                      fixedFactors = "HabitatComplexity",
-                      fixedTerms = list(CroplandIntensity=1),
-                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
-
-# Save model output 
-summary(Model1a$model)
-Model1aStats <- as.data.frame(Model1a$stats)
-Model1aStats
-tab_model(Model1a$model)
-
-# Check model assumptions
-Supplementary.Figure<-resid_panel(Model1a$model)
-
-
-###--------------Insect
-Model1b <- GLMERSelect(modelData = DataEuaInsect1,
-                      responseVar = "Insect_RarefiedChaoRichness1",
-                      fitFamily = "gaussian",
-                      fixedFactors = "HabitatComplexity",
-                      fixedTerms = list(CroplandIntensity=1),
-                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
-
-# Save model output 
-summary(Modelb$model)
-Model1bStats <- as.data.frame(Model1b$stats)
-Model1bStats
-tab_model(Modelb$model)
-# Check model assumptions
-Supplementary.Figure<-resid_panel(Model1b$model)
-
-
-###------------------------------Total density----------------------------###
-###--------------Fish
-Model1c <- GLMERSelect(modelData = DataEuaFish1,
-                      responseVar = "FishDensity",
-                      fitFamily = "gaussian",
-                      fixedFactors = "HabitatComplexity",
-                      fixedTerms = list(CroplandIntensity=1),
-                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
-
-# Save model output 
-summary(Model1c$model)
-Model1cStats <- as.data.frame(Model1c$stats)
-Model1cStats
-tab_model(Model1c$model)
-# Check model assumptions
-Supplementary.Figure<-resid_panel(Model1c$model)
-
-###--------------Insect
-Model1d <- GLMERSelect(modelData = DataEuaInsect1,
-                      responseVar = "InsectDensity",
-                      fitFamily = "gaussian",
-                      fixedFactors = "HabitatComplexity",
-                      fixedTerms = list(CroplandIntensity=1),
-                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
-
-# Save model output 
-summary(Model1d$model)
-Model1dStats <- as.data.frame(Model1d$stats)
-Model1dStats
-tab_model(Model1d$model)
-# Check model assumptions
-Supplementary.Figure<-resid_panel(Model1d$model)
-
-
-#----------------------------Ecoregional Total beta-diversity LCBD---------------
-###--------------Fish 
-Model1e <- GLMERSelect(modelData = DataEuaFish1,
-                      responseVar = "LocalFishTotalLCBD",
-                      fitFamily = "gaussian",
-                      fixedFactors = "HabitatComplexity",
-                      fixedTerms = list(CroplandIntensity=1),
-                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,2)"))
-
-# Save model output 
-summary(Model1e$model)
-Model1eStats <- as.data.frame(Model1e$stats)
-Model1eStats
-tab_model(Model1e$model)
+# Saving model output
+summary(Model1)
+Anova(Model1)
+tab_model(Model1,transform = NULL)
 
 # Check model assumptions
-Supplementary.Figure<-resid_panel(Model1e$model)
+plot(Model1)
+qqnorm(resid(Model1))
+qqline(resid(Model1))
+plot(Model1, SumNat_PFC~resid(.))
+plot(Model1, XFC_NAT_ALG_AQM~resid(.))
+plot(Model1, XFC_NAT_ALG_AQM~resid(.))
+plot(Model1, UrbanActivityIndex~resid(.))
+plot(Model1, CroplandIntensity~resid(.))
+plot(Model1, MeanAnnualTemperature~resid(.))
+plot(Model1, MeanPrecipitation~resid(.))#
+plot(Model1, SDDEPTH_CM~resid(.))
+plot(Model1, RiparianPresent~resid(.))
+plot(Model1, CatchmentsArea~resid(.))
+# Testing VIF
+vif(Model1) ## VIF < 3, indicating no collinearity
 
-###-------------Insect
-Model1f <- GLMERSelect(modelData = DataEuaInsect1,
-                      responseVar = "LocalInsectTotalLCBD",
-                      fitFamily = "gaussian",
-                      fixedFactors = "HabitatComplexity",
-                      fixedTerms = list(CroplandIntensity=1),
-                      randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                      fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,1)"))
 
-# Save model output 
-summary(Model1f$model)
-Model1fStats <- as.data.frame(Model1f$stats)
-Model1fStats
+#save estimates and CIs:
+Model1_95ci<-intervals(Model1, which="fixed", level = 0.95) # get 95% CI
+Model1_75ci<-intervals(Model1,which="fixed",level=0.75) #get 75% CI
+Model1_df<-data.frame(cbind(Model1_95ci$fixed, Model1_75ci$fixed))
+colnames(Model1_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model1_df
+#write.csv(Model1_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model1_df.csv")
 
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
 
-## Only to plot effect
-Model1fb<-glmer(LocalInsectTotalLCBD ~ CroplandIntensity * HabitatComplexity +
-                 (1|Ecoregions)+(1|YEAR),
-               family = gaussian,
-               data=DataEuaInsect1)
+## run model scaled
+Model1_scale<-lme(sqrt(ObservedFishRichness) ~
+               scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+               scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+               scale(I(UrbanActivityIndex^2), scale = TRUE, center = FALSE) + 
+               scale(I(CroplandIntensity^2), scale = TRUE, center = FALSE) + 
+               scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+               scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+               scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+               scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+               scale(CatchmentsArea, scale = TRUE, center = TRUE),
+               random =~1|YEAR/Ecoregions,
+               control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+               correlation = corCompSymm(form = ~as.numeric(YEAR)),
+               na.action = "na.fail",
+               data = DataEuaFish1)
 
-# Save model output 
-tab_model(Model1fb)
+plot_summs(Model1_scale)
+tab_model(Model1_scale)
+summary(Model1_scale)
+# Testing VIF
+vif(Model1_scale) ## VIF < 3, indicating no collinearity
+
+#save estimates and CIs:
+Model1_scale_95ci<-intervals(Model1_scale, which="fixed", level = 0.95) # get 95% CI
+Model1_scale_75ci<-intervals(Model1_scale,which="fixed",level=0.75) #get 75% CI
+Model1_scale_df<-data.frame(cbind(Model1_scale_95ci$fixed, Model1_scale_75ci$fixed))
+colnames(Model1_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model1_scale_df
+write.csv(Model1_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model1_scale_df.csv")
+
+#------------------------Insect richness------------------------------#
+Model2<-lme(sqrt(ObservedInsectRichness) ~
+             SumNat_PFC + 
+             XFC_NAT_ALG_AQM + 
+             UrbanActivityIndex + 
+             CroplandIntensity + 
+             MeanAnnualTemperature + 
+             MeanPrecipitation + 
+             SDDEPTH_CM +
+             RiparianPresent + 
+             CatchmentsArea,
+             random =~1 + YEAR|Ecoregions,
+             control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+             correlation = corCompSymm(form = ~as.numeric(YEAR) | YEAR|Ecoregions),
+             na.action = "na.fail",
+             data = DataEuaInsect1)
+
+# Saving model output
+summary(Model2)
+Anova(Model2, type="II")
+tab_model(Model2,transform = NULL)
 
 # Check model assumptions
-Supplementary.Figure<-resid_panel(Model1f$model)
+plot(Model2) 
+qqnorm(resid(Model2))
+qqline(resid(Model2))
+plot(Model2, SumNat_PFC~resid(.))
+plot(Model2, XFC_NAT_ALG_AQM~resid(.))
+plot(Model2, UrbanActivityIndex~resid(.))
+plot(Model2, CroplandIntensity~resid(.))
+plot(Model2, MeanAnnualTemperature~resid(.))
+plot(Model2, MeanPrecipitation~resid(.))
+plot(Model2, SDDEPTH_CM~resid(.))
+plot(Model2, RiparianPresent~resid(.))
+plot(Model2, CatchmentsArea~resid(.))
+# Testing VIF
+vif(Model2) ## VIF < 3, indicating no collinearity
 
-#----------------------------National Total beta-diversity LCBD---------------
-###--------------Fish 
-Model1g <- GLMERSelect(modelData = DataEuaFish1,
-                       responseVar = "RegionalFishTotalLBCD",
-                       fitFamily = "gaussian",
-                       fixedFactors = "HabitatComplexity",
-                       fixedTerms = list(CroplandIntensity=1),
-                       randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                       fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,1)"))
 
-# Save model output 
-Anova(Model1g$model)
-summary(Model1g$model)
-Model1gStats <- as.data.frame(Model1g$stats)
-Model1gStats
+#save estimates and CIs:
+Model2_95ci<-intervals(Model2, which="fixed", level = 0.95) # get 95% CI
+Model2_75ci<-intervals(Model2,which="fixed",level=0.75) #get 75% CI
+Model2_df<-data.frame(cbind(Model2_95ci$fixed, Model2_75ci$fixed))
+colnames(Model2_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model2_df
+#write.csv(Model2_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model2_df.csv")
 
-## Only to plot effect
-Model1gb<-glmer(RegionalFishTotalLBCD ~ CroplandIntensity * HabitatComplexity +
-                  (1|Ecoregions)+(1|YEAR),
-                family = gaussian,
-                data=DataEuaFish1)
 
-# Save model output 
-tab_model(Model1gb)
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
+## run model scaled
+Model2_scale<-lme(sqrt(ObservedInsectRichness) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                  scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaInsect1)
+
+plot_summs(Model2_scale)
+tab_model(Model2_scale)
+summary(Model10_scale)
+#save estimates and CIs:
+Model2_scale_95ci<-intervals(Model2_scale, which="fixed", level = 0.95) # get 95% CI
+Model2_scale_75ci<-intervals(Model2_scale,which="fixed",level=0.75) #get 75% CI
+Model2_scale_df<-data.frame(cbind(Model2_scale_95ci$fixed, Model2_scale_75ci$fixed))
+colnames(Model2_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model2_scale_df
+write.csv(Model2_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model2_scale_df.csv")
+
+
+#------------------------Fish total density------------------------------#
+Model3<-lme(log(FishTotalDensity) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM +
+            I(UrbanActivityIndex^2) + 
+            I(CroplandIntensity^2) + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1|YEAR/Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR)),
+            na.action = "na.fail",
+            data = DataEuaFish1)
+
+# Saving model output
+summary(Model3)
+Anova(Model3, type="II")
+tab_model(Model3,transform = NULL)
 
 # Check model assumptions
-Supplementary.Figure<-resid_panel(Modelg$model)
+plot(Model3) 
+qqnorm(resid(Model3))
+qqline(resid(Model3)) 
+plot(Model3, SumNat_PFC~resid(.))
+plot(Model3, XFC_NAT_ALG_AQM~resid(.))
+plot(Model3, UrbanActivityIndex~resid(.))
+plot(Model3, CroplandIntensity~resid(.))
+plot(Model3, MeanAnnualTemperature~resid(.))
+plot(Model3, MeanPrecipitation~resid(.))
+plot(Model3, SDDEPTH_CM~resid(.))
+plot(Model3, RiparianPresent~resid(.))
+plot(Model3, CatchmentsArea~resid(.))
+# Testing VIF
+vif(Model3) ## VIF < 3, indicating no collinearity
 
-###-------------Insect 
-Model1h <- GLMERSelect(modelData = DataEuaInsect1,
-                       responseVar = "RegionalInsectTotalLBCD",
-                       fitFamily = "gaussian",
-                       fixedFactors = "HabitatComplexity",
-                       fixedTerms = list(CroplandIntensity=1),
-                       randomStruct ="(1|Ecoregions)+(1|YEAR)",
-                       fixedInteractions = c("HabitatComplexity:poly(CroplandIntensity,1)"))
 
-# Save model output 
-summary(Model1h$model)
-Model1hStats <- as.data.frame(Model1h$stats)
-Model1hStats
+#save estimates and CIs:
+Model3_95ci<-intervals(Model3, which="fixed", level = 0.95) # get 95% CI
+Model3_75ci<-intervals(Model3,which="fixed",level=0.75) #get 75% CI
+Model3_df<-data.frame(cbind(Model3_95ci$fixed, Model3_75ci$fixed))
+colnames(Model3_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model3_df
+#write.csv(Model3_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model3_df.csv")
 
-## Only to plot effect
-Model1hb<-glmer(RegionalInsectTotalLBCD ~ CroplandIntensity * HabitatComplexity +
-                  (1|Ecoregions)+(1|YEAR),
-                family = gaussian,
-                data=DataEuaInsect1)
 
-# Save model output 
-tab_model(Model1hb)
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
+## run model scaled
+Model3_scale<-lme(log(FishTotalDensity) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(I(UrbanActivityIndex^2), scale = TRUE, center = FALSE) + 
+                  scale(I(CroplandIntensity^2), scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaFish1)
+
+plot_summs(Model3_scale)
+tab_model(Model3_scale)
+summary(Model3_scale)
+#save estimates and CIs:
+Model3_scale_95ci<-intervals(Model3_scale, which="fixed", level = 0.95) # get 95% CI
+Model3_scale_75ci<-intervals(Model3_scale,which="fixed",level=0.75) #get 75% CI
+Model3_scale_df<-data.frame(cbind(Model3_scale_95ci$fixed, Model3_scale_75ci$fixed))
+colnames(Model3_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model3_scale_df
+write.csv(Model3_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model3_scale_df.csv")
+
+
+#------------------------Insect total density------------------------------#
+Model4<-lme(log(InsectDensity) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM + 
+            UrbanActivityIndex + 
+            CroplandIntensity + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1 + YEAR|Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR) | YEAR|Ecoregions),
+            na.action = "na.fail",
+            data = DataEuaInsect1)
+
+# Saving model output
+summary(Model4)
+Anova(Model4, type="II")
+tab_model(Model4,transform = NULL)
 
 # Check model assumptions
-Supplementary.Figure<-resid_panel(Model1h$model)
-
-
-# Create dataframe for values to predict response to richness, density, and LCBD of fish and insect 
-
-## ModelA - Fish Richness vs Cropland Intensification
-nd1a <- expand.grid(
-  CroplandIntensity=seq(from = min(Model1a$data$CroplandIntensity),to = max(Model1a$data$CroplandIntensity),
-                         length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1a$data$HabitatComplexity)))
-nd1a
-
-## ModelB - Insects Richness vs Cropland Intensification
-nd1b <- expand.grid(
-  CroplandIntensity=seq(from = min(Model1b$data$CroplandIntensity),to = max(Model1b$data$CroplandIntensity),
-                         length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1b$data$HabitatComplexity)))
-nd1b
-
-## ModelC - Fish Density vs Cropland Intensification
-nd1c <- expand.grid(
-  CroplandIntensity=seq(from = min(Model1c$data$CroplandIntensity),to = max(Model1c$data$CroplandIntensity),
-                         length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1c$data$HabitatComplexity)))
-nd1c
-
-## ModelD - Insects Density vs Cropland Intensification
-nd1d <- expand.grid(
-  CroplandIntensity=seq(from = min(Model1d$data$CroplandIntensity),to = max(Model1d$data$CroplandIntensity),
-                         length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1d$data$HabitatComplexity)))
-nd1d
-
-## ModelE - Fish Ecoregional LCBD vs Cropland Intensification
-nd1e <- expand.grid(
-  CroplandIntensity=seq(from = min(Model1e$data$CroplandIntensity),to = max(Model1e$data$CroplandIntensity),
-                         length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1e$data$HabitatComplexity)))
-nd1e
-
-## ModelF - Insects Ecoregional LCBD vs Cropland Intensification
-nd1f <- expand.grid(
-  CroplandIntensity=seq(from = min(Model1f$data$CroplandIntensity),to = max(Model1f$data$CroplandIntensity),
-                         length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1f$data$HabitatComplexity)))
-nd1f
-
-
-## ModelG - Fish National LCBD vs Cropland Intensification
-nd1g <-expand.grid(
-  CroplandIntensity=seq(from = min(Model1g$data$CroplandIntensity),to = max(Model1g$data$CroplandIntensity),
-                        length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1g$data$HabitatComplexity)))
-nd1g
-
-## ModelH - Insect National LCBD vs Cropland Intensification
-nd1h <- expand.grid(
-  CroplandIntensity=seq(from = min(Model1h$data$CroplandIntensity),to = max(Model1h$data$CroplandIntensity),
-                        length.out = 100),
-  HabitatComplexity=factor(c("High","Low"),levels = levels(Model1h$data$HabitatComplexity)))
-nd1h
-
-### Defining diversity
-# Fish
-nd1a$Fish_RarefiedChaoRichness <- 0
-nd1b$Insect_RarefiedChaoRichness1 <- 0
-nd1c$FishDensity <- 0
-nd1d$InsectDensity <- 0
-nd1e$LocalFishTotalLCBD <- 0
-nd1f$LocalInsectTotalLCBD <- 0
-nd1g$RegionalFishTotalLBCD <- 0
-nd1h$RegionalInsectTotalLBCD <- 0
-
-## Creating the predictions for ModelA - Fish richness ~ Habitat complexity vs. Cropland intensification
-# adjust plot 1: mean anomaly and abundance
-QPVModel1a <- quantile(x = Model1a$data$CroplandIntensity[
-  Model1a$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1a <- quantile(x = Model1a$data$CroplandIntensity[
-  Model1a$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1a <- PredictGLMERRandIter(model = Model1a$model,data = nd1a)
-
-# back transform values
-a.preds.tmeanModel1a <- exp(a.preds.tmeanModel1a)-1
-a.preds.tmeanModel1a
-# convert to relative to reference
-a.preds.tmeanModel1a <- sweep(x = a.preds.tmeanModel1a, MARGIN = 2,STATS = a.preds.tmeanModel1a[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="High") & (nd1a$CroplandIntensity < QPVModel1a[1])),] <- NA
-a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="High") & (nd1a$CroplandIntensity > QPVModel1a[2])),] <- NA
-a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="Low") & (nd1a$CroplandIntensity < QALModel1a[1])),] <- NA
-a.preds.tmeanModel1a[which((nd1a$HabitatComplexity=="Low") & (nd1a$CroplandIntensity > QALModel1a[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1a$PredMedian <- ((apply(X = a.preds.tmeanModel1a, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1a$PredUpper <- ((apply(X = a.preds.tmeanModel1a, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1a$PredLower <- ((apply(X = a.preds.tmeanModel1a, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-
-## Creating the predictions for ModelB - Insects richness ~ Habitat complexity vs. Cropland intensification
-
-# adjust plot 1
-QPVModel1b <- quantile(x = Model1b$data$CroplandIntensity[
-  Model1b$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1b <- quantile(x = Model1b$data$CroplandIntensity[
-  Model1b$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1b <- PredictGLMERRandIter(model = Model1b$model,data = nd1b)
-
-# back transform values
-a.preds.tmeanModel1b <- exp(a.preds.tmeanModel1b)-1
-a.preds.tmeanModel1b
-# convert to relative to reference
-a.preds.tmeanModel1b <- sweep(x = a.preds.tmeanModel1b, MARGIN = 2,STATS = a.preds.tmeanModel1b[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="High") & (nd1b$CroplandIntensity < QPVModel1b[1])),] <- NA
-a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="High") & (nd1b$CroplandIntensity > QPVModel1b[2])),] <- NA
-a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="Low") & (nd1b$CroplandIntensity < QALModel1b[1])),] <- NA
-a.preds.tmeanModel1b[which((nd1b$HabitatComplexity=="Low") & (nd1b$CroplandIntensity > QALModel1b[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1b$PredMedian <- ((apply(X = a.preds.tmeanModel1b, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1b$PredUpper <- ((apply(X = a.preds.tmeanModel1b, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1b$PredLower <- ((apply(X = a.preds.tmeanModel1b, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-## Creating the predictions for ModelC - Fish density ~ Habitat complexity vs. Cropland intensification
-# adjust plot 1:
-QPVModel1c <- quantile(x = Model1c$data$CroplandIntensity[
-  Model1c$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1c <- quantile(x = Model1c$data$CroplandIntensity[
-  Model1c$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1c <- PredictGLMERRandIter(model = Model1c$model,data = nd1c)
-
-# back transform values
-a.preds.tmeanModel1c <- exp(a.preds.tmeanModel1c)-0.5
-a.preds.tmeanModel1c
-# convert to relative to reference
-a.preds.tmeanModel1c<- sweep(x = a.preds.tmeanModel1c, MARGIN = 2,STATS = a.preds.tmeanModel1c[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity < QPVModel1c[1])),] <- NA
-a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity > QPVModel1c[2])),] <- NA
-a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity < QALModel1c[1])),] <- NA
-a.preds.tmeanModel1c[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity > QALModel1c[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1c$PredMedian <- ((apply(X = a.preds.tmeanModel1c, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1c$PredUpper <- ((apply(X = a.preds.tmeanModel1c, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1c$PredLower <- ((apply(X = a.preds.tmeanModel1c, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-
-## Creating the predictions for ModelD - Insect density ~ Habitat complexity vs. Cropland intensification
-# adjust plot 1: mean anomaly and abundance
-QPVModel1d <- quantile(x = Model1d$data$CroplandIntensity[
-  Model1d$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1d <- quantile(x = Model1d$data$CroplandIntensity[
-  Model1d$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1d <- PredictGLMERRandIter(model = Model1d$model,data = nd1d)
-
-# back transform values
-a.preds.tmeanModel1d <- exp(a.preds.tmeanModel1d)
-a.preds.tmeanModel1d
-# convert to relative to reference
-a.preds.tmeanModel1d<- sweep(x = a.preds.tmeanModel1d, MARGIN = 2,STATS = a.preds.tmeanModel1d[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity < QPVModel1d[1])),] <- NA
-a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="High") & (nd1d$CroplandIntensity > QPVModel1d[2])),] <- NA
-a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity < QALModel1d[1])),] <- NA
-a.preds.tmeanModel1d[which((nd1d$HabitatComplexity=="Low") & (nd1d$CroplandIntensity > QALModel1d[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1d$PredMedian <- ((apply(X = a.preds.tmeanModel1d, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1d$PredUpper <- ((apply(X = a.preds.tmeanModel1d, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1d$PredLower <- ((apply(X = a.preds.tmeanModel1d, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-## Creating the predictions for ModelE - Fish Ecoregional LCBD ~ Habitat complexity vs. Cropland intensification
-# adjust plot 1: mean anomaly and abundance
-QPVModel1e <- quantile(x = Model1e$data$CroplandIntensity[
-  Model1e$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1e <- quantile(x = Model1e$data$CroplandIntensity[
-  Model1e$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1e <- PredictGLMERRandIter(model = Model1e$model,data = nd1e)
-
-# back transform values
-a.preds.tmeanModel1e <- exp(a.preds.tmeanModel1e)
-a.preds.tmeanModel1e
-# convert to relative to reference
-a.preds.tmeanModel1e<- sweep(x = a.preds.tmeanModel1e, MARGIN = 2,STATS = a.preds.tmeanModel1e[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="High") & (nd1e$CroplandIntensity < QPVModel1e[1])),] <- NA
-a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="High") & (nd1e$CroplandIntensity > QPVModel1e[2])),] <- NA
-a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="Low") & (nd1e$CroplandIntensity < QALModel1e[1])),] <- NA
-a.preds.tmeanModel1e[which((nd1e$HabitatComplexity=="Low") & (nd1e$CroplandIntensity > QALModel1e[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1e$PredMedian <- ((apply(X = a.preds.tmeanModel1e, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1e$PredUpper <- ((apply(X = a.preds.tmeanModel1e, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1e$PredLower <- ((apply(X = a.preds.tmeanModel1e, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-
-## Creating the predictions for ModelF - Insect Ecoregional LCBD ~ Habitat complexity vs. Cropland intensification
-# adjust plot 1: mean anomaly and abundance
-QPVModel1f <- quantile(x = Model1f$data$CroplandIntensity[
-  Model1f$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1f <- quantile(x = Model1f$data$CroplandIntensity[
-  Model1f$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1f <- PredictGLMERRandIter(model = Model1f$model,data = nd1f)
-
-# back transform values
-a.preds.tmeanModel1f <- exp(a.preds.tmeanModel1f)
-a.preds.tmeanModel1f
-# convert to relative to reference
-a.preds.tmeanModel1f<- sweep(x = a.preds.tmeanModel1f, MARGIN = 2,STATS = a.preds.tmeanModel1f[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="High") & (nd1f$CroplandIntensity < QPVModel1f[1])),] <- NA
-a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="High") & (nd1f$CroplandIntensity > QPVModel1f[2])),] <- NA
-a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="Low") & (nd1f$CroplandIntensity < QALModel1f[1])),] <- NA
-a.preds.tmeanModel1f[which((nd1f$HabitatComplexity=="Low") & (nd1f$CroplandIntensity > QALModel1f[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1f$PredMedian <- ((apply(X = a.preds.tmeanModel1f, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1f$PredUpper <- ((apply(X = a.preds.tmeanModel1f, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1f$PredLower <- ((apply(X = a.preds.tmeanModel1f, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-
-## Creating the predictions for ModelG - fish National LCBD ~ Habitat complexity vs. Cropland intensification
-# adjust plot 1: mean anomaly and abundance
-QPVModel1g <- quantile(x = Model1g$data$CroplandIntensity[
-  Model1g$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1g <- quantile(x = Model1g$data$CroplandIntensity[
-  Model1g$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1g <- PredictGLMERRandIter(model = Model1g$model,data = nd1g)
-
-# back transform values
-a.preds.tmeanModel1g <- exp(a.preds.tmeanModel1g)
-a.preds.tmeanModel1g
-# convert to relative to reference
-a.preds.tmeanModel1g<- sweep(x = a.preds.tmeanModel1g, MARGIN = 2,STATS = a.preds.tmeanModel1g[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="High") & (nd1g$CroplandIntensity < QPVModel1g[1])),] <- NA
-a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="High") & (nd1g$CroplandIntensity > QPVModel1g[2])),] <- NA
-a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="Low") & (nd1g$CroplandIntensity < QALModel1g[1])),] <- NA
-a.preds.tmeanModel1g[which((nd1g$HabitatComplexity=="Low") & (nd1g$CroplandIntensity > QALModel1g[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1g$PredMedian <- ((apply(X = a.preds.tmeanModel1g, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1g$PredUpper <- ((apply(X = a.preds.tmeanModel1g, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1g$PredLower <- ((apply(X = a.preds.tmeanModel1g, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-
-## Creating the predictions for ModelH - Insect National LCBD ~ Habitat complexity vs. Cropland intensification
-# adjust plot 1: mean anomaly and abundance
-QPVModel1h <- quantile(x = Model1h$data$CroplandIntensity[
-  Model1h$data$HabitatComplexity=="High"],probs = exclQuantiles)
-QALModel1h <- quantile(x = Model1h$data$CroplandIntensity[
-  Model1h$data$HabitatComplexity=="Low"],probs = exclQuantiles)
-
-# predict the results
-a.preds.tmeanModel1h <- PredictGLMERRandIter(model = Model1h$model,data = nd1h)
-
-# back transform values
-a.preds.tmeanModel1h <- exp(a.preds.tmeanModel1h)
-a.preds.tmeanModel1h
-# convert to relative to reference
-a.preds.tmeanModel1h<- sweep(x = a.preds.tmeanModel1h, MARGIN = 2,STATS = a.preds.tmeanModel1h[1,],FUN = '/')
-
-# remove anything above and below the quantiles
-a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="High") & (nd1h$CroplandIntensity < QPVModel1h[1])),] <- NA
-a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="High") & (nd1h$CroplandIntensity > QPVModel1h[2])),] <- NA
-a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="Low") & (nd1h$CroplandIntensity < QALModel1h[1])),] <- NA
-a.preds.tmeanModel1h[which((nd1h$HabitatComplexity=="Low") & (nd1h$CroplandIntensity > QALModel1h[2])),] <- NA
-
-# Get the median, upper and lower quants for the plot
-nd1h$PredMedian <- ((apply(X = a.preds.tmeanModel1h, MARGIN = 1, FUN = median,na.rm=TRUE))*100)-100
-nd1h$PredUpper <- ((apply(X = a.preds.tmeanModel1h, MARGIN = 1, FUN = quantile,probs = 0.975,na.rm=TRUE))*100)-100
-nd1h$PredLower <- ((apply(X = a.preds.tmeanModel1h, MARGIN = 1, FUN = quantile,probs = 0.025,na.rm=TRUE))*100)-100
-
-# set factor levels
-nd1a$HabitatComplexity <- factor(nd1a$HabitatComplexity, levels = c("High","Low"))
-nd1b$HabitatComplexity <- factor(nd1b$HabitatComplexity, levels = c("High","Low"))
-nd1c$HabitatComplexity <- factor(nd1c$HabitatComplexity, levels = c("High","Low"))
-nd1d$HabitatComplexity <- factor(nd1d$HabitatComplexity, levels = c("High","Low"))
-nd1e$HabitatComplexity <- factor(nd1e$HabitatComplexity, levels = c("High","Low"))
-nd1f$HabitatComplexity <- factor(nd1f$HabitatComplexity, levels = c("High","Low"))
-nd1g$HabitatComplexity <- factor(nd1g$HabitatComplexity, levels = c("High","Low"))
-nd1h$HabitatComplexity <- factor(nd1h$HabitatComplexity, levels = c("High","Low"))
-
-###%######################################################%##
-#                                                          #
-####          plot richness, density, and LCBD            ####
-#    Figure 3 in the main manuscript (A-H)                 #
-##%######################################################%##
-
-# ---------------------------Fish richness vs. Urban Intensification
-Fig1a <- ggplot(data = nd1a, aes(x = CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 0.75) +
-  geom_ribbon(aes(ymin = nd1a$PredLower, ymax = nd1a$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in taxa richness (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
- # ylim(c(-60,60)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("a")
-Fig1a
-
-# -----------------------Insect richness vs. Urban Intensification
-Fig1b <- ggplot(data = nd1b, aes(x = CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 1) +
-  geom_ribbon(aes(ymin = nd1b$PredLower, ymax = nd1b$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in taxa richness (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
-  #ylim(c(-60,60)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("B")
-Fig1b
-
-# ---------------------------Fish Density vs. Urban Intensification
-Fig1c <- ggplot(data = nd1c,  aes(x =CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 0.75) +
-  geom_ribbon(aes(ymin = nd1c$PredLower, ymax = nd1c$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in total density  (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
-  #ylim(c(-100,80)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("C")
-Fig1c
-
-# ------------------------Insects density vs. Urban Intensification
-Fig1d <- ggplot(data = nd1d, aes(x = CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 0.75) +
-  geom_ribbon(aes(ymin = nd1d$PredLower, ymax = nd1d$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in total density  (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
-  # ylim(c(-100,100)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("D")
-Fig1d
-
-# ----------------------Fish Ecoregional LCBD vs. Urban Intensification
-Fig1e <- ggplot(data = nd1e, aes(x = CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 1) +
-  geom_ribbon(aes(ymin = nd1e$PredLower, ymax = nd1e$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in ecoregional LCBD (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
-  #ylim(c(-60,60)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("E")
-Fig1e
-
-
-# ----------------------------Insect Ecoregional LCBD vs. Urban Intensification
-Fig1f <- ggplot(data = nd1f, aes(x = CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 1) +
-  geom_ribbon(aes(ymin = nd1f$PredLower, ymax = nd1f$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in ecoregional LCBD (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
- # ylim(c(-60,60)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("F")
-Fig1f
-
-
-# -----------------------Fish National LCBD vs. Urban Intensification
-Fig1g <- ggplot(data = nd1g, aes(x = CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 1) +
-  geom_ribbon(aes(ymin = nd1g$PredLower, ymax = nd1g$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in national LCBD (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
-  # ylim(c(-60,60)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("G")
-Fig1g
-
-
-# --------------------------Insect National LCBD vs. Urban Intensification
-Fig1h <- ggplot(data = nd1h, aes(x = CroplandIntensity, y = PredMedian)) + 
-  geom_line(aes(col = HabitatComplexity), size = 1) +
-  geom_ribbon(aes(ymin = nd1h$PredLower, ymax = nd1h$PredUpper, 
-                  fill = HabitatComplexity), alpha = 0.1) +
-  geom_hline(yintercept = 0, lty = "dashed", size = 0.6) +
-  scale_fill_manual(values = c("#0072B2","#D55E00")) +
-  scale_colour_manual(values = c("#0072B2","#D55E00")) +
-  theme_bw() + 
-  scale_x_continuous(breaks = c(0,1,2,3,4,5), limits = c(0, 5)) +
-  scale_y_continuous(breaks = c(-100,-50, 0, 50, 100), limits = c(-100, 100)) +
-  ylab("Change in national LCBD (%)") +
-  xlab("Cropland intensification") +
-  #xlim(c(-1, 5)) +
-  # ylim(c(-60,60)) +  
-  theme_light(base_size = 18)+
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =16),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =18, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.border = element_blank(), 
-        panel.background = element_blank(), 
-        #   axis.ticks = element_line(size = 0.4), 
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("H")
-Fig1h
-
-
-
+plot(Model4) 
+qqnorm(resid(Model4))
+qqline(resid(Model4)) 
+plot(Model4, SumNat_PFC~resid(.))
+plot(Model4, XFC_NAT_ALG_AQM~resid(.))
+plot(Model4, UrbanActivityIndex~resid(.))
+plot(Model4, CroplandIntensity~resid(.))
+plot(Model4, MeanAnnualTemperature~resid(.))
+plot(Model4, MeanPrecipitation~resid(.))
+plot(Model4, SDDEPTH_CM~resid(.))
+plot(Model4, RiparianPresent~resid(.))
+plot(Model4, CatchmentsArea~resid(.))
+# Testing VIF
+vif(Model4) ## VIF < 3, indicating no collinearity
+
+#save estimates and CIs:
+Model4_95ci<-intervals(Model4, which="fixed", level = 0.95) # get 95% CI
+Model4_75ci<-intervals(Model4,which="fixed",level=0.75) #get 75% CI
+Model4_df<-data.frame(cbind(Model4_95ci$fixed, Model4_75ci$fixed))
+colnames(Model4_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model4_df
+#write.csv(Model4_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model4_df.csv")
+
+
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
+## run model scaled
+Model4_scale<-lme(log(InsectDensity) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                  scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaInsect1)
+
+plot_summs(Model4_scale)
+tab_model(Model4_scale)
+#save estimates and CIs:
+Model4_scale_95ci<-intervals(Model4_scale, which="fixed", level = 0.95) # get 95% CI
+Model4_scale_75ci<-intervals(Model4_scale,which="fixed",level=0.75) #get 75% CI
+Model4_scale_df<-data.frame(cbind(Model4_scale_95ci$fixed, Model4_scale_75ci$fixed))
+colnames(Model4_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model4_scale_df
+write.csv(Model4_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model4_scale_df.csv")
+
+
+#------------------------Fish regional LCBD------------------------------#
+Model5<-lme(log(RegionalFishTotalLBCD) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM + 
+            UrbanActivityIndex + 
+            CroplandIntensity + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1|YEAR/Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR)),
+            na.action = "na.fail",
+            data = DataEuaFish1)
+
+
+# Saving model output
+summary(Model5)
+Anova(Model5, type="II")
+tab_model(Model5,transform = NULL)
+
+# Check model assumptions
+plot(Model5) 
+qqnorm(resid(Model5))
+qqline(resid(Model5))
+plot(Model5, SumNat_PFC~resid(.))
+plot(Model5, XFC_NAT_ALG_AQM~resid(.))
+plot(Model5, UrbanActivityIndex~resid(.))
+plot(Model5, CroplandIntensity~resid(.))
+plot(Model5, MeanAnnualTemperature~resid(.))
+plot(Model5, MeanPrecipitation~resid(.))
+plot(Model5, SDDEPTH_CM~resid(.))
+plot(Model5, RiparianPresent~resid(.))
+plot(Model5, CatchmentsArea~resid(.))
+# Testing VIF
+vif(Model5) ## VIF < 3, indicating no collinearity
+
+
+#save estimates and CIs:
+Model5_95ci<-intervals(Model5, which="fixed", level = 0.95) # get 95% CI
+Model5_75ci<-intervals(Model5,which="fixed",level=0.75) #get 75% CI
+Model5_df<-data.frame(cbind(Model5_95ci$fixed, Model5_75ci$fixed))
+colnames(Model5_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model5_df
+#write.csv(Model5_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model5_df.csv")
+
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
+## run model scaled
+Model5_scale<-lme(log2(RegionalFishTotalLBCD) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                  scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaFish1)
+
+plot_summs(Model5_scale)
+tab_model(Model5_scale)
+summary(Model5_scale)
+#save estimates and CIs:
+Model5_scale_95ci<-intervals(Model5_scale, which="fixed", level = 0.95) # get 95% CI
+Model5_scale_75ci<-intervals(Model5_scale,which="fixed",level=0.75) #get 75% CI
+Model5_scale_df<-data.frame(cbind(Model5_scale_95ci$fixed, Model5_scale_75ci$fixed))
+colnames(Model5_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model5_scale_df
+write.csv(Model5_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model5_scale_df.csv")
+
+
+#------------------------Insect regional LCBD------------------------------#
+Model6<-lme(log2(RegionalInsectTotalLBCD) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM + 
+            UrbanActivityIndex + 
+            CroplandIntensity + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1 + YEAR|Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR) | YEAR|Ecoregions),
+            na.action = "na.fail",
+            data = DataEuaInsect1)
+
+# Saving model output
+summary(Model6)
+Anova(Model6, type="II")
+tab_model(Model6,transform = NULL)
+
+# Check model assumptions
+plot(Model6)
+qqnorm(resid(Model6))
+qqline(resid(Model6)) 
+plot(Model6, SumNat_PFC~resid(.))
+plot(Model6, XFC_NAT_ALG_AQM~resid(.))
+plot(Model6, UrbanActivityIndex~resid(.))
+plot(Model6, CroplandIntensity~resid(.))
+plot(Model6, MeanAnnualTemperature~resid(.))
+plot(Model6, MeanPrecipitation~resid(.))
+plot(Model6, SDDEPTH_CM~resid(.))
+plot(Model6, RiparianPresent~resid(.))
+plot(Model6, CatchmentsArea~resid(.))
+
+# Testing VIF
+vif(Model6) ## VIF < 3, indicating no collinearity
+
+
+#save estimates and CIs:
+Model6_95ci<-intervals(Model6, which="fixed", level = 0.95) # get 95% CI
+Model6_75ci<-intervals(Model6,which="fixed",level=0.75) #get 75% CI
+Model6_df<-data.frame(cbind(Model6_95ci$fixed, Model6_75ci$fixed))
+colnames(Model6_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model6_df
+#write.csv(Model5_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model5_df.csv")
+
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
+
+## run model scaled
+Model6_scale<-lme(log2(RegionalInsectTotalLBCD) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                  scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaInsect1)
+plot_summs(Model6_scale)
+tab_model(Model6_scale)
+#save estimates and CIs:
+Model6_scale_95ci<-intervals(Model6_scale, which="fixed", level = 0.95) # get 95% CI
+Model6_scale_75ci<-intervals(Model6_scale,which="fixed",level=0.75) #get 75% CI
+Model6_scale_df<-data.frame(cbind(Model6_scale_95ci$fixed, Model6_scale_75ci$fixed))
+colnames(Model6_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model6_scale_df
+write.csv(Model6_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model6_scale_df.csv")
+
+
+#------------------------Fish LCBD richness difference------------------------------#
+Model7<-lme(log2(RegionalFishRichLBCD) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM + 
+            UrbanActivityIndex + 
+            CroplandIntensity + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1|YEAR/Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR)),
+            na.action = "na.fail",
+            data = DataEuaFish1)
+
+
+# Saving model output
+summary(Model7)
+Anova(Model7, type="II")
+tab_model(Model7,transform = NULL)
+
+# Check model assumptions
+plot(Model7) 
+qqnorm(resid(Model7))
+qqline(resid(Model7))
+plot(Model7, SumNat_PFC~resid(.))
+plot(Model7, XFC_NAT_ALG_AQM~resid(.))
+plot(Model7, UrbanActivityIndex~resid(.))
+plot(Model7, CroplandIntensity~resid(.))
+plot(Model7, MeanAnnualTemperature~resid(.))
+plot(Model7, MeanPrecipitation~resid(.))
+plot(Model7, SDDEPTH_CM~resid(.))
+plot(Model7, RiparianPresent~resid(.))
+plot(Model7, CatchmentsArea~resid(.))
+
+# Testing VIF
+vif(Model7) ## VIF < 3, indicating no collinearity
+
+#save estimates and CIs:
+Model7_95ci<-intervals(Model7, which="fixed", level = 0.95) # get 95% CI
+Model7_75ci<-intervals(Model7,which="fixed",level=0.75) #get 75% CI
+Model7_df<-data.frame(cbind(Model7_95ci$fixed, Model7_75ci$fixed))
+colnames(Model7_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model7_df
+#write.csv(Model7_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model7_df.csv")
+
+
+## run model scaled
+Model7_scale<-lme(log2(RegionalFishRichLBCD) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                  scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaFish1)
+
+
+plot_summs(Model7_scale)
+tab_model(Model7_scale)
+#save estimates and CIs:
+Model7_scale_95ci<-intervals(Model7_scale, which="fixed", level = 0.95) # get 95% CI
+Model7_scale_75ci<-intervals(Model7_scale,which="fixed",level=0.75) #get 75% CI
+Model7_scale_df<-data.frame(cbind(Model7_scale_95ci$fixed, Model7_scale_75ci$fixed))
+colnames(Model7_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model7_scale_df
+write.csv(Model7_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model7_scale_df.csv")
+
+
+#------------------------Insect LCBD richness difference------------------------------#
+Model8<-lme(log2(RegionalInsectRichLBCD) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM + 
+            UrbanActivityIndex + 
+            CroplandIntensity + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1 + YEAR|Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR) | YEAR|Ecoregions),
+            na.action = "na.fail",
+            data = DataEuaInsect1)
+
+# Saving model output
+summary(Model8)
+Anova(Model8, type="II")
+tab_model(Model8,transform = NULL)
+
+# Check model assumptions
+plot(Model8) 
+qqnorm(resid(Model8))
+qqline(resid(Model8)) 
+plot(Model8, SumNat_PFC~resid(.))
+plot(Model8, XFC_NAT_ALG_AQM~resid(.))
+plot(Model8, UrbanActivityIndex~resid(.))
+plot(Model8, CroplandIntensity~resid(.))
+plot(Model8, MeanAnnualTemperature~resid(.))
+plot(Model8, MeanPrecipitation~resid(.))
+plot(Model8, SDDEPTH_CM~resid(.))
+plot(Model8, RiparianPresent~resid(.))
+plot(Model8, CatchmentsArea~resid(.))
+
+# Testing VIF
+vif(Model8) ## VIF < 3, indicating no collinearity
+
+#save estimates and CIs:
+Model8_95ci<-intervals(Model8, which="fixed", level = 0.95) # get 95% CI
+Model8_75ci<-intervals(Model8,which="fixed",level=0.75) #get 75% CI
+Model8_df<-data.frame(cbind(Model8_95ci$fixed, Model8_75ci$fixed))
+colnames(Model8_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model8_df
+#write.csv(Model8_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model8_df.csv")
+
+## run model scaled
+Model8_scale<-lme(log2(RegionalInsectRichLBCD) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                  scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaInsect1)
+
+plot_summs(Model8_scale)
+tab_model(Model8_scale)
+#save estimates and CIs:
+Model8_scale_95ci<-intervals(Model8_scale, which="fixed", level = 0.95) # get 95% CI
+Model8_scale_75ci<-intervals(Model8_scale,which="fixed",level=0.75) #get 75% CI
+Model8_scale_df<-data.frame(cbind(Model8_scale_95ci$fixed, Model8_scale_75ci$fixed))
+colnames(Model8_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model8_scale_df
+write.csv(Model8_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model8_scale_df.csv")
+
+
+
+#------------------------Fish LCBD replacement------------------------------#
+Model9<-lme(log2(RegionalFishReplLBCD) ~
+            SumNat_PFC + 
+            XFC_NAT_ALG_AQM + 
+            UrbanActivityIndex + 
+            CroplandIntensity + 
+            MeanAnnualTemperature + 
+            MeanPrecipitation + 
+            SDDEPTH_CM +
+            RiparianPresent + 
+            CatchmentsArea,
+            random =~1|YEAR/Ecoregions,
+            control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+            correlation = corCompSymm(form = ~as.numeric(YEAR)),
+            na.action = "na.fail",
+            data = DataEuaFish1)
+
+
+# Saving model output
+summary(Model9)
+Anova(Model9, type="II")
+tab_model(Model9,transform = NULL)
+
+# Check model assumptions
+plot(Model9) 
+qqnorm(resid(Model9))
+qqline(resid(Model9))  
+plot(Model9, SumNat_PFC~resid(.))
+plot(Model9, XFC_NAT_ALG_AQM~resid(.))
+plot(Model9, UrbanActivityIndex~resid(.))
+plot(Model9, CroplandIntensity~resid(.))
+plot(Model9, MeanAnnualTemperature~resid(.))
+plot(Model9, MeanPrecipitation~resid(.))
+plot(Model9, SDDEPTH_CM~resid(.))
+plot(Model9, RiparianPresent~resid(.))
+plot(Model9, CatchmentsArea~resid(.))
+
+# Testing VIF
+vif(Model9) ## VIF < 3, indicating no collinearity
+
+#save estimates and CIs:
+Model9_95ci<-intervals(Model9, which="fixed", level = 0.95) # get 95% CI
+Model9_75ci<-intervals(Model9,which="fixed",level=0.75) #get 75% CI
+Model9_df<-data.frame(cbind(Model9_95ci$fixed, Model9_75ci$fixed))
+colnames(Model9_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model9_df
+#write.csv(Model9_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model9_df.csv")
+
+
+## run model scaled
+Model9_scale<-lme(log(RegionalFishReplLBCD) ~
+                  scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                  scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                  scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                  scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                  scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                  scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                  scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                  scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                  scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                  random =~1|YEAR/Ecoregions,
+                  control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                  correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                  na.action = "na.fail",
+                  data = DataEuaFish1)
+
+
+plot_summs(Model9_scale)
+tab_model(Model9_scale)
+#save estimates and CIs:
+Model9_scale_95ci<-intervals(Model9_scale, which="fixed", level = 0.95) # get 95% CI
+Model9_scale_75ci<-intervals(Model9_scale,which="fixed",level=0.75) #get 75% CI
+Model9_scale_df<-data.frame(cbind(Model9_scale_95ci$fixed, Model9_scale_75ci$fixed))
+colnames(Model9_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model9_scale_df
+write.csv(Model9_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model9_scale_df.csv")
+
+
+#------------------------Insect LCBD replacement------------------------------#
+Model10<-lme(log2(RegionalInsectReplLBCD) ~
+             SumNat_PFC + 
+             XFC_NAT_ALG_AQM + 
+             UrbanActivityIndex + 
+             CroplandIntensity + 
+             MeanAnnualTemperature + 
+             MeanPrecipitation + 
+             SDDEPTH_CM +
+             RiparianPresent + 
+             CatchmentsArea,
+             random =~1 + YEAR|Ecoregions,
+             control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+             correlation = corCompSymm(form = ~as.numeric(YEAR) | YEAR|Ecoregions),
+             na.action = "na.fail",
+             data = DataEuaInsect1)
+
+# Saving model output
+summary(Model10)
+Anova(Model10, type="II")
+tab_model(Model10,transform = NULL)
+
+# Check model assumptions
+plot(Model10) 
+qqnorm(resid(Model10))
+qqline(resid(Model10)) 
+plot(Model10, SumNat_PFC~resid(.))
+plot(Model10, XFC_NAT_ALG_AQM~resid(.))
+plot(Model10, UrbanActivityIndex~resid(.))
+plot(Model10, CroplandIntensity~resid(.))
+plot(Model10, MeanAnnualTemperature~resid(.))
+plot(Model10, MeanPrecipitation~resid(.))
+plot(Model10, SDDEPTH_CM~resid(.))
+plot(Model10, RiparianPresent~resid(.))
+plot(Model10, CatchmentsArea~resid(.))
+
+# Testing VIF
+vif(Model10) ## VIF < 3, indicating no collinearity
+
+#save estimates and CIs:
+Model10_95ci<-intervals(Model10, which="fixed", level = 0.95) # get 95% CI
+Model10_75ci<-intervals(Model10,which="fixed",level=0.75) #get 75% CI
+Model10_df<-data.frame(cbind(Model10_95ci$fixed, Model10_75ci$fixed))
+colnames(Model10_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model10_df
+#write.csv(Model9_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model9_df.csv")
+
+
+## run model scaled
+Model10_scale<-lme(log2(RegionalInsectReplLBCD) ~
+                   scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                   scale(XFC_NAT_ALG_AQM, scale = TRUE, center = FALSE) + 
+                   scale(UrbanActivityIndex, scale = TRUE, center = FALSE) + 
+                   scale(CroplandIntensity, scale = TRUE, center = FALSE) + 
+                   scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                   scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                   scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                   scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                   scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaInsect1)
+plot_summs(Model10_scale)
+tab_model(Model10_scale)
+#save estimates and CIs:
+Model10_scale_95ci<-intervals(Model10_scale, which="fixed", level = 0.95) # get 95% CI
+Model10_scale_75ci<-intervals(Model10_scale,which="fixed",level=0.75) #get 75% CI
+Model10_scale_df<-data.frame(cbind(Model10_scale_95ci$fixed, Model10_scale_75ci$fixed))
+colnames(Model10_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model10_scale_df
+write.csv(Model10_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model10_scale_df.csv")
+
+
+
+######################################################################################################################################
+###Now, we will analyze the role of habitat heterogeneity in buffering the impacts of human-induced disturbance on diversity 
+###To do this, we will apply an interactive model of habitat heterogeneity vs. human land-uses (agriculture + urbanisation).
+###Interactive models
+###Scale and centralize all the predictors
+
+
+DataEuaFish1 <- DataEuaFish1 %>%
+  # group_by(Ecoregions) %>%
+  mutate(
+    SumNat_PFC_scale = scale(SumNat_PFC,scale = T, center = F),
+    XFC_NAT_ALG_AQM_scale = scale(XFC_NAT_ALG_AQM, scale = T, center = F),
+    UrbanActivityIndex_scale = scale(UrbanActivityIndex, scale = T, center = F),
+    CroplandIntensity_scale = scale(CroplandIntensity,   scale = T, center = F),
+    MeanAnnualTemperature_scale = scale(MeanAnnualTemperature,   scale = T, center = F),
+    MeanPrecipitation_scale = scale(MeanPrecipitation,   scale = T, center = F),
+    SDDEPTH_CM_scale = scale(SDDEPTH_CM,   scale = T, center = F),
+    RiparianPresent_scale = scale(RiparianPresent,   scale = T, center = F),
+    CatchmentsArea_scale = scale(CatchmentsArea,   scale = T, center = F),
+    )
+
+###Now, we will scale all variables. This makes the interaction term in model comparable
+DataEuaInsect1 <- DataEuaInsect1 %>%
+  # group_by(Ecoregions) %>%
+  mutate(
+    SumNat_PFC_scale = scale(SumNat_PFC,scale = T, center = F),
+    XFC_NAT_ALG_AQM_scale = scale(XFC_NAT_ALG_AQM, scale = T, center = F),
+    UrbanActivityIndex_scale = scale(UrbanActivityIndex, scale = T, center = F),
+    CroplandIntensity_scale = scale(CroplandIntensity,   scale = T, center = F),
+    MeanAnnualTemperature_scale = scale(MeanAnnualTemperature,   scale = T, center = F),
+    MeanPrecipitation_scale = scale(MeanPrecipitation,   scale = T, center = F),
+    SDDEPTH_CM_scale = scale(SDDEPTH_CM,   scale = T, center = F),
+    RiparianPresent_scale = scale(RiparianPresent,   scale = T, center = F),
+    CatchmentsArea_scale = scale(CatchmentsArea,   scale = T, center = F),
+  )
+
+
+## run model scaled
+Model11_scale<-lme(sqrt(ObservedFishRichness) ~
+                   SumNat_PFC_scale * I(UrbanActivityIndex_scale^2) + 
+                   SumNat_PFC_scale * I(CroplandIntensity_scale^2) + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaFish1)
+
+#save estimates and CIs:
+Model11_scale_95ci<-intervals(Model11_scale, which="fixed", level = 0.95) # get 95% CI
+Model11_scale_75ci<-intervals(Model11_scale,which="fixed",level=0.75) #get 75% CI
+Model11_scale_df<-data.frame(cbind(Model11_scale_95ci$fixed, Model11_scale_75ci$fixed))
+colnames(Model11_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model11_scale_df
+write.csv(Model11_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model11_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model11<-ggpredict(Model11_scale, terms = c("SumNat_PFC_scale[all]"), 
+                              ci.lvl=0.95,back.transform = F)
+plot(PredictData_model11, show_data = F)
+write.csv(PredictData_model11,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model11.csv")
+
+######saving dataset scaled and standardized
+ScaledFishRichnessData<-cbind(DataEuaFish1$ObservedFishRichness, DataEuaFish1$SumNat_PFC_scale,DataEuaFish1$Ecoregions)
+write.csv(ScaledFishRichnessData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledFishRichnessData.csv")
+
+
+
+## -----Insect community
+## run model scaled
+Model12_scale<-lme(sqrt(ObservedInsectRichness) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                  data = DataEuaInsect1)
+
+
+#save estimates and CIs:
+Model12_scale_95ci<-intervals(Model12_scale, which="fixed", level = 0.95) # get 95% CI
+Model12_scale_75ci<-intervals(Model12_scale,which="fixed",level=0.75) #get 75% CI
+Model12_scale_df<-data.frame(cbind(Model12_scale_95ci$fixed, Model12_scale_75ci$fixed))
+colnames(Model12_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model12_scale_df
+write.csv(Model12_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model12_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model12<-ggpredict(Model12_scale, terms = c("SumNat_PFC_scale[all]"), 
+                              ci.lvl=0.95,back.transform = F)
+plot(PredictData_model12, show_data = F)
+write.csv(PredictData_model12,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model12.csv")
+
+######saving dataset scaled and standardized
+ScaledInsectRichnessData<-cbind(DataEuaInsect1$ObservedInsectRichness, DataEuaInsect1$SumNat_PFC_scale,DataEuaInsect1$Ecoregions)
+write.csv(ScaledInsectRichnessData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledInsectRichnessData.csv")
+
+
+###------------------------------ Total density-----------------------------###
+## -----Fish community
+## run model scaled
+Model13_scale<-lme(log(FishTotalDensity) ~
+                   SumNat_PFC_scale * I(UrbanActivityIndex_scale^2) + 
+                   SumNat_PFC_scale * I(CroplandIntensity_scale^2) + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaFish1)
+
+
+
+#save estimates and CIs:
+Model13_scale_95ci<-intervals(Model13_scale, which="fixed", level = 0.95) # get 95% CI
+Model13_scale_75ci<-intervals(Model13_scale,which="fixed",level=0.75) #get 75% CI
+Model13_scale_df<-data.frame(cbind(Model13_scale_95ci$fixed, Model13_scale_75ci$fixed))
+colnames(Model13_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model13_scale_df
+write.csv(Model13_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model13_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model13<-ggpredict(Model13_scale, terms = c("SumNat_PFC_scale[all]"), 
+                              ci.lvl=0.95,back.transform = F)
+
+plot(PredictData_model13, show_data = F)
+write.csv(PredictData_model13,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model13.csv")
+
+######saving dataset scaled and standardized
+ScaledFishDensityData<-cbind(DataEuaFish1$FishTotalDensity, DataEuaFish1$SumNat_PFC_scale,DataEuaFish1$Ecoregions)
+write.csv(ScaledFishDensityData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledFishDensityData.csv")
+
+
+## -----Insect community
+## run model scaled
+Model14_scale<-lme(log(InsectDensity) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaInsect1)
+
+
+#save estimates and CIs:
+Model14_scale_95ci<-intervals(Model14_scale, which="fixed", level = 0.95) # get 95% CI
+Model14_scale_75ci<-intervals(Model14_scale,which="fixed",level=0.75) #get 75% CI
+Model14_scale_df<-data.frame(cbind(Model14_scale_95ci$fixed, Model14_scale_75ci$fixed))
+colnames(Model14_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model14_scale_df
+write.csv(Model14_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model14_scale_df.csv")
+
+######get marginal effects to plot PREDICT lines
+PredictData_model14<-ggpredict(Model14_scale, terms = c("SumNat_PFC_scale[all]"), 
+                              ci.lvl=0.95,back.transform = F)
+plot(PredictData_model14, show_data = F)
+write.csv(PredictData_model14,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model14.csv")
+
+######saving dataset scaled and standardized
+ScaledInsectDensityData<-cbind(DataEuaInsect1$InsectDensity, DataEuaInsect1$SumNat_PFC_scale,DataEuaInsect1$Ecoregions)
+write.csv(ScaledInsectDensityData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledInsectDensityData.csv")
+
+###------------------------------Regional LCBD-----------------------------###
+## -----Fish community
+## run model scaled
+Model15_scale<-lme(log2(RegionalFishTotalLBCD) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaFish1)
+
+#save estimates and CIs:
+Model15_scale_95ci<-intervals(Model15_scale, which="fixed", level = 0.95) # get 95% CI
+Model15_scale_75ci<-intervals(Model15_scale,which="fixed",level=0.75) #get 75% CI
+Model15_scale_df<-data.frame(cbind(Model15_scale_95ci$fixed, Model15_scale_75ci$fixed))
+colnames(Model15_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model15_scale_df
+write.csv(Model15_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model15_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model15<-ggpredict(Model15_scale, terms = c("SumNat_PFC_scale[all]"), 
+                               ci.lvl=0.95,back.transform = F)
+plot(PredictData_model15, show_data = F, jitter = 0.02)
+write.csv(PredictData_model15,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model15.csv")
+
+######saving dataset scaled and standardized
+ScaledFishLCBDData<-cbind(DataEuaFish1$RegionalFishTotalLBCD, DataEuaFish1$SumNat_PFC_scale,DataEuaFish1$Ecoregions)
+write.csv(ScaledFishLCBDData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledFishLCBDData.csv")
+
+
+## -----Insect community
+## run model scaled
+Model16_scale<-lme(log2(RegionalInsectTotalLBCD) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaInsect1)
+
+#save estimates and CIs:
+Model16_scale_95ci<-intervals(Model16_scale, which="fixed", level = 0.95) # get 95% CI
+Model16_scale_75ci<-intervals(Model16_scale,which="fixed",level=0.75) #get 75% CI
+Model16_scale_df<-data.frame(cbind(Model16_scale_95ci$fixed, Model16_scale_75ci$fixed))
+colnames(Model16_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model16_scale_df
+write.csv(Model16_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model16_scale_df.csv")
+
+######get marginal effects to plot PREDICT lines
+PredictData_model16<-ggpredict(Model16_scale, terms = c("SumNat_PFC_scale[all]"), 
+                               ci.lvl=0.95,back.transform = F)
+plot(PredictData_model16, show_data = F, jitter = 0.02)
+write.csv(PredictData_model16,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model16.csv")
+
+######saving dataset scaled and standardized
+ScaledInsectLCBDData<-cbind(DataEuaInsect1$RegionalInsectTotalLBCD, DataEuaInsect1$SumNat_PFC_scale,DataEuaInsect1$Ecoregions)
+write.csv(ScaledInsectLCBDData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledInsectLCBDData.csv")
+
+
+###------------------------------LCBD richness difference-----------------------------###
+## -----Fish community
+## run model scaled
+Model17_scale<-lme(log2(RegionalFishRichLBCD) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaFish1)
+
+#save estimates and CIs:
+Model17_scale_95ci<-intervals(Model17_scale, which="fixed", level = 0.95) # get 95% CI
+Model17_scale_75ci<-intervals(Model17_scale,which="fixed",level=0.75) #get 75% CI
+Model17_scale_df<-data.frame(cbind(Model17_scale_95ci$fixed, Model17_scale_75ci$fixed))
+colnames(Model17_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model17_scale_df
+write.csv(Model17_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model17_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model17<-ggpredict(Model17_scale, terms = c("SumNat_PFC_scale[all]"), 
+                               ci.lvl=0.95,back.transform = F)
+plot(PredictData_model17, show_data = F, jitter = 0.02)
+write.csv(PredictData_model17,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model17.csv")
+
+######saving dataset scaled and standardized
+ScaledFishRichnessDiffData<-cbind(DataEuaFish1$RegionalFishRichLBCD, DataEuaFish1$SumNat_PFC_scale,DataEuaFish1$Ecoregions)
+write.csv(ScaledFishRichnessDiffData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledFishRichnessDiffData.csv")
+
+
+
+## -----Insect community
+## run model scaled
+Model18_scale<-lme(log2(RegionalInsectRichLBCD) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaInsect1)
+
+#save estimates and CIs:
+Model18_scale_95ci<-intervals(Model18_scale, which="fixed", level = 0.95) # get 95% CI
+Model18_scale_75ci<-intervals(Model18_scale,which="fixed",level=0.75) #get 75% CI
+Model18_scale_df<-data.frame(cbind(Model18_scale_95ci$fixed, Model18_scale_75ci$fixed))
+colnames(Model18_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model18_scale_df
+write.csv(Model18_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model18_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model18<-ggpredict(Model18_scale, terms = c("SumNat_PFC_scale[all]"), 
+                               ci.lvl=0.95,back.transform = F)
+plot(PredictData_model18, show_data = F, jitter = 0.02)
+write.csv(PredictData_model18,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model18.csv")
+
+######saving dataset scaled and standardized
+ScaledFishRichnessDiffData<-cbind(DataEuaInsect1$RegionalInsectRichLBCD, DataEuaInsect1$SumNat_PFC_scale,DataEuaInsect1$Ecoregions)
+write.csv(ScaledFishRichnessDiffData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledFishRichnessDiffData.csv")
+
+###------------------------------LCBD replacement-----------------------------###
+## -----Fish community
+## run model scaled
+Model19_scale<-lme(log2(RegionalFishReplLBCD) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaFish1)
+
+#save estimates and CIs:
+Model19_scale_95ci<-intervals(Model19_scale, which="fixed", level = 0.95) # get 95% CI
+Model19_scale_75ci<-intervals(Model19_scale,which="fixed",level=0.75) #get 75% CI
+Model19_scale_df<-data.frame(cbind(Model19_scale_95ci$fixed, Model19_scale_75ci$fixed))
+colnames(Model19_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model19_scale_df
+write.csv(Model19_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model19_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model19<-ggpredict(Model19_scale, terms = c("SumNat_PFC_scale[all]"), 
+                               ci.lvl=0.95,back.transform = F)
+plot(PredictData_model19, show_data = F, jitter = 0.02)
+write.csv(PredictData_model19,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model19.csv")
+
+######saving dataset scaled and standardized
+ScaledFishReplacementData<-cbind(DataEuaFish1$RegionalFishReplLBCD, DataEuaFish1$SumNat_PFC_scale,DataEuaFish1$Ecoregions)
+write.csv(ScaledFishReplacementData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledFishReplacementData.csv")
+
+
+## -----Insect community
+## run model scaled
+Model20_scale<-lme(log2(RegionalInsectReplLBCD) ~
+                   SumNat_PFC_scale * UrbanActivityIndex_scale + 
+                   SumNat_PFC_scale * CroplandIntensity_scale + 
+                   XFC_NAT_ALG_AQM_scale + 
+                   MeanAnnualTemperature_scale + 
+                   MeanPrecipitation_scale + 
+                   SDDEPTH_CM_scale +
+                   RiparianPresent_scale + 
+                   CatchmentsArea_scale,
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaInsect1)
+
+#save estimates and CIs:
+Model20_scale_95ci<-intervals(Model20_scale, which="fixed", level = 0.95) # get 95% CI
+Model20_scale_75ci<-intervals(Model20_scale,which="fixed",level=0.75) #get 75% CI
+Model20_scale_df<-data.frame(cbind(Model20_scale_95ci$fixed, Model20_scale_75ci$fixed))
+colnames(Model20_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model20_scale_df
+write.csv(Model20_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model20_scale_df.csv")
+
+
+######get marginal effects to plot PREDICT lines
+PredictData_model20<-ggpredict(Model20_scale, terms = c("SumNat_PFC_scale[all]"), 
+                               ci.lvl=0.95,back.transform = F)
+plot(PredictData_model20, show_data = F, jitter = 0.02)
+write.csv(PredictData_model20,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\PredictData_model20.csv")
+
+######saving dataset scaled and standardized
+ScaledInsectReplacementData<-cbind(DataEuaInsect1$RegionalInsectReplLBCD, DataEuaInsect1$SumNat_PFC_scale,DataEuaInsect1$Ecoregions)
+write.csv(ScaledInsectReplacementData,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\ScaledInsectReplacementData.csv")
+
+
+
+###############################################################################################################################################
+### Modeling the effect of drivers on the density of invasive species and the ratio between non-native and native fish species
+###Additive models
+#------------------------Density of exotic species------------------------------#
+Model21<-lme(log(InvasiveFishDensity+1) ~
+             SumNat_PFC + 
+             XFC_NAT_ALG_AQM_scale + 
+             I(UrbanActivityIndex^2) + 
+             I(CroplandIntensity^2) + 
+             MeanAnnualTemperature + 
+             MeanPrecipitation + 
+             SDDEPTH_CM +
+             RiparianPresent + 
+             CatchmentsArea,
+             random =~1|YEAR/Ecoregions,
+             control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+             correlation = corCompSymm(form = ~as.numeric(YEAR)),
+             na.action = "na.fail",
+             data = DataEuaFish1)
+
+# Saving model output
+summary(Model21)
+Anova(Model21)
+tab_model(Model21,transform = NULL)
+
+# Check model assumptions
+plot(Model21)
+qqnorm(resid(Model21))
+qqline(resid(Model21)) 
+plot(Model21, SumAll_PFC~resid(.))
+plot(Model21, UrbanActivityIndex~resid(.))
+plot(Model21, CroplandIntensity~resid(.))
+plot(Model21, MeanAnnualTemperature~resid(.))
+plot(Model21, MeanPrecipitation~resid(.))
+plot(Model21, SDDEPTH_CM~resid(.))
+plot(Model21, RiparianPresent~resid(.))
+plot(Model21, CatchmentsArea~resid(.))
+# Testing VIF
+vif(Model21) ## VIF < 3, indicating no collinearity
+
+
+#save estimates and CIs:
+Model21_95ci<-intervals(Model21, which="fixed", level = 0.95) # get 95% CI
+Model21_75ci<-intervals(Model21,which="fixed",level=0.75) #get 75% CI
+Model21_df<-data.frame(cbind(Model21_95ci$fixed, Model21_75ci$fixed))
+colnames(Model21_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model21_df
+#write.csv(Model1_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model1_df.csv")
+
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
+
+## run model scaled
+Model21_scale<-lme(log(InvasiveFishDensity+1) ~
+                   scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                   scale(XFC_NAT_ALG_AQM_scale, scale = TRUE, center = FALSE) + 
+                   scale(I(UrbanActivityIndex^2), scale = TRUE, center = FALSE) + 
+                   scale(I(CroplandIntensity^2), scale = TRUE, center = FALSE) + 
+                   scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                   scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                   scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                   scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                   scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaFish1)
+
+
+plot_summs(Model21_scale)
+tab_model(Model21_scale)
+summary(Model22_scale)
+#save estimates and CIs:
+Model21_scale_95ci<-intervals(Model21_scale, which="fixed", level = 0.95) # get 95% CI
+Model21_scale_75ci<-intervals(Model21_scale,which="fixed",level=0.75) #get 75% CI
+Model21_scale_df<-data.frame(cbind(Model21_scale_95ci$fixed, Model21_scale_75ci$fixed))
+colnames(Model21_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model21_scale_df
+write.csv(Model21_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model21_scale_df.csv")
+
+
+
+#------------------------Density ratio exotic over native species------------------------------#
+Model22<-lme(log(RatioInvasiveDensity+1) ~
+             SumNat_PFC + 
+             XFC_NAT_ALG_AQM_scale + 
+             I(UrbanActivityIndex^2) + 
+             I(CroplandIntensity^2) + 
+             MeanAnnualTemperature + 
+             MeanPrecipitation + 
+             SDDEPTH_CM +
+             RiparianPresent + 
+             CatchmentsArea,
+             random =~1|YEAR/Ecoregions,
+             control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+             correlation = corCompSymm(form = ~as.numeric(YEAR)),
+             na.action = "na.fail",
+             data = DataEuaFish1)
+# Saving model output
+summary(Model22)
+Anova(Model22)
+tab_model(Model22,transform = NULL)
+
+# Check model assumptions
+plot(Model22) 
+qqnorm(resid(Model22))
+qqline(resid(Model22))
+plot(Model22, SumNat_PFC~resid(.))
+plot(Model22, UrbanActivityIndex~resid(.))
+plot(Model22, CroplandIntensity~resid(.))
+plot(Model22, MeanAnnualTemperature~resid(.))
+plot(Model22, MeanPrecipitation~resid(.))
+plot(Model22, SDDEPTH_CM~resid(.))
+plot(Model22, RiparianPresent~resid(.))
+plot(Model22, CatchmentsArea~resid(.))
+# Testing VIF
+vif(Model22) ## VIF < 3, indicating no collinearity
+
+
+#save estimates and CIs:
+Model22_95ci<-intervals(Model22, which="fixed", level = 0.95) # get 95% CI
+Model22_75ci<-intervals(Model22,which="fixed",level=0.75) #get 75% CI
+Model22_df<-data.frame(cbind(Model22_95ci$fixed, Model22_75ci$fixed))
+colnames(Model22_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model22_df
+#write.csv(Model1_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model1_df.csv")
+
+###Run model to get scaled estimates for plot (Figure 1)
+##(This way can compare magnitude of effects across explanatory variables with different ranges)
+
+## run model scaled
+Model22_scale<-lme(log(RatioInvasiveDensity+0.1) ~
+                   scale(SumNat_PFC, scale = TRUE, center = FALSE) + 
+                   scale(XFC_NAT_ALG_AQM_scale, scale = TRUE, center = FALSE) + 
+                   scale(I(UrbanActivityIndex^2), scale = TRUE, center = FALSE) + 
+                   scale(I(CroplandIntensity^2), scale = TRUE, center = FALSE) + 
+                   scale(MeanAnnualTemperature, scale = TRUE, center = FALSE) + 
+                   scale(MeanPrecipitation, scale = TRUE, center = FALSE) + 
+                   scale(SDDEPTH_CM, scale = TRUE, center = FALSE) +
+                   scale(RiparianPresent, scale = TRUE, center = FALSE) + 
+                   scale(CatchmentsArea, scale = TRUE, center = TRUE),
+                   random =~1|YEAR/Ecoregions,
+                   control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+                   correlation = corCompSymm(form = ~as.numeric(YEAR)),
+                   na.action = "na.fail",
+                   data = DataEuaFish1)
+
+plot_summs(Model22_scale)
+tab_model(Model22_scale)
+#save estimates and CIs:
+Model22_scale_95ci<-intervals(Model22_scale, which="fixed", level = 0.95) # get 95% CI
+Model22_scale_75ci<-intervals(Model22_scale,which="fixed",level=0.75) #get 75% CI
+Model22_scale_df<-data.frame(cbind(Model22_scale_95ci$fixed, Model22_scale_75ci$fixed))
+colnames(Model22_scale_df)<-c('ll_95', 'est', 'ul_95', 'll_75', 'est2', 'ul_75')
+Model22_scale_df
+write.csv(Model22_scale_df,"C:\\Users\\Dieison\\Desktop\\PaperDadosEUA\\Model22_scale_df.csv")
 
 
 
