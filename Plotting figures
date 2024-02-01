@@ -13,45 +13,6 @@ library(patchwork)
 
 ##%######################################################%##
 #                                                          #
-####                    Figure 1b                        ####
-#                                                          #
-##%######################################################%##
-
-# Load dataset
-### Fish
-DataFigure1AB<-read.csv("Data_Figure1A.csv", header = TRUE, sep = ";")
-DataFigure1AB
-
-
-#######Species richness
-
-Figure.1A<-DataFigure1AB %>%
-  ggplot(aes(y=Richness, x=Organism, fill=Organism))+
-  geom_jitter(show.legend = FALSE, width = 0.25, shape=21,
-              fill="#66A61E", size=2, color="black", stroke = 0.6, alpha = 0.4)+
-  stat_summary(fun = median, show.legend = FALSE, geom = "crossbar",
-               color="red", width=0.6, size=1)+
-  scale_y_continuous("Number of species/genera\nper stream site", breaks = seq(0,80, by=20), limits = c(0,80))  +
-  scale_x_discrete("", labels = c("Fish", "Insect"))+
-  theme_bw() +
-  theme(legend.position = "none",
-        title = element_text(size = 14, face = "bold"),
-        axis.text.y = element_text(size =14),
-        #axis.text.x = element_text(size = 12, angle = 45, vjust = 0.5),
-        axis.text = element_text(size =16, colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1.1),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        #panel.border = element_blank(), 
-        panel.background = element_blank(),  
-        axis.line = element_line(size = 0.4)) +
-  theme(axis.ticks.length=unit(0.14,"inch"))+
-  ggtitle("a")
-Figure.1A
-
-
-##%######################################################%##
-#                                                          #
 ####                  Figure 2A-B                        ####
 #                                                          #
 ##%######################################################%##
