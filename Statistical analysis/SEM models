@@ -1,6 +1,613 @@
 
+###Here we will employ structural equation modeling (SEM) to examine the pathways by which urban and cropland intensification affect biodiversity (richness, total density and LCBD) of fish and insects, and habitat heterogeneity 
+## Load packages
+library(tidyverse)
+library(car)
+library(MASS)
+library(nlme)
+library(factoextra)
+library(piecewiseSEM)
+
+# Load dataset
+### Fish
+DataEuaFish<-read.csv(".FishDataShare.csv", header = TRUE, sep = ";")
+DataEuaFish
+
+### Insects
+DataEuaInsect<-read.csv(".InsectDataSet.csv" header = TRUE, sep = ";")
+DataEuaInsect
 
 
+#############################################################################################################
+## Remove NAs in the specified columns
+#----------------------------------------------Fish dataset--------------------------------------------------##
+## First, we will create an Urban-intensity index, using the PCA method:
+#  For this, we will use four human activity variables: 
+# (i)  Human population
+# (ii) Anthropogenic Imperviousness Surface
+# (iii) Roads density
+# (iv)  High-human land-use intensity
+
+## Standardizing predictors using Log transforming:
+DataEuaFish$RoadsDensity<-log(DataEuaFish$RoadsDensity+1)
+DataEuaFish$DensidadePopulational<-log(DataEuaFish$DensidadePopulational+1)
+DataEuaFish$HighIntensiveLandUse<-log(DataEuaFish$HighIntensiveLandUse+1)
+DataEuaFish$AnthropogenicImperviousnessSufaces<-log(DataEuaFish$AnthropogenicImperviousnessSufaces+1)
+## Merging Urban-activities variables
+UrbanActivitiesVariables_Fish<-DataEuaFish   %>%
+  dplyr::select(HighIntensiveLandUse, 
+                AnthropogenicImperviousnessSufaces,
+                RoadsDensity,
+                DensidadePopulational)
+UrbanActivitiesVariables_Fish
+PCASUrbanActivitiesVariables_Fish<-prcomp(UrbanActivitiesVariables_Fish[c(1:4)],center = T, scale. = T, rank. = 3)
+summary(PCASUrbanActivitiesVariables_Fish) # The PCA1 axis accounted for 84% of the variation in the urban stream variables
+## Looking at the correlation between the variables and the first axis of the PCA
+# PC1 vs HighIntensiveLandUse = 0.4851342
+# PC1 vs AnthropogenicImperviousnessSufaces = 0.5290173
+# PC1 vs RoadsDensity  = 0.4892229
+# PC1 vs DensidadePopulational  = 0.4954256
+# Plotting variable in the PCA axis
+PlotUrbanActivitiesVariables_Fish<-fviz_pca_biplot(PCASUrbanActivitiesVariables_Fish,
+                                                   repel = TRUE,geom = "none", 
+                                                   col.var = "#2E9FDF", # Variables color
+                                                   col.ind = "#696969",
+                                                   pointsize = 0,
+                                                   alpha.ind=0.4
+)+ scale_x_continuous(breaks = c(-4,-2,-0, 2,4,8), limits = c(-3,8))+
+  scale_y_continuous(breaks = c(-4,-2,-0, 2,4), limits = c(-3,4)) 
+
+#####PC1 is positively correlated with all urbanization variables, so we will use the PC1 axis as a proxy for urban intensification in subsequent analyses
+
+## Extracting PCI axis for further analysis
+Axis_UrbanActivitiesVariables_Fish<-predict(PCASUrbanActivitiesVariables_Fish,UrbanActivitiesVariables_Fish)
+UrbanActivityIndex_Fish<-as.data.frame(Axis_UrbanActivitiesVariables_Fish)
+DataEuaFish$UrbanActivityIndex<-UrbanActivityIndex_Fish$PC1
+
+## remove NAs in the specified columns
+DataEuaFish1 <- na.omit(DataEuaFish[,c('SITE_ID', 'Ecoregions', 'YEAR', 'SDDEPTH_CM',
+                                      'SumNat_PFC', 'XFC_NAT_ALG_AQM',
+                                       'FishTotalDensity', 'Fish_RarefiedChaoRichness', 'ObservedFishRichness',
+                                       'RegionalFishTotalLBCD', 'RegionalFishReplLBCD', 'RegionalFishRichLBCD',
+                                       'InvasiveFishDensity', 'RatioInvasiveDensity', 'RiparianPresent', 'CatchmentsArea',
+                                       'MeanAnnualTemperature', 'MeanPrecipitation',
+                                       'UrbanActivityIndex', 'CroplandIntensity')])
+#Log-transforming drivers
+DataEuaFish1$CatchmentsArea<-log10(DataEuaFish1$CatchmentsArea+1)
+DataEuaFish1$SDDEPTH_CM<-log10(DataEuaFish1$SDDEPTH_CM+0.1)
+DataEuaFish1$SumNat_PFC<-log10(DataEuaFish1$SumNat_PFC+1)
+DataEuaFish1$XFC_NAT_ALG_AQM<-log10(DataEuaFish1$XFC_NAT_ALG_AQM+1)
+
+
+#----------------------------------------------Insect dataset--------------------------------------------------##
+## First, we will create an Urban-intensity index, using the PCA method:
+#  For this, we will use four human activity variables: 
+# (i)  Human population
+# (ii) Anthropogenic Imperviousness Surface
+# (iii) Roads density
+# (iv)  High-human land-use intensity
+
+## Standardizing predictors using Log transforming:
+DataEuaInsect$RoadsDensity<-log(DataEuaInsect$RoadsDensity+1)
+DataEuaInsect$DensidadePopulational<-log(DataEuaInsect$DensidadePopulational+1)
+DataEuaInsect$HighIntensiveLandUse<-log(DataEuaInsect$HighIntensiveLandUse+1)
+DataEuaInsect$AnthropogenicImperviousnessSufaces<-log(DataEuaInsect$AnthropogenicImperviousnessSufaces+1)
+## Merging Urban-activities variables
+UrbanActivitiesVariables_Insect<-DataEuaInsect   %>%
+  dplyr::select(HighIntensiveLandUse, 
+                AnthropogenicImperviousnessSufaces,
+                RoadsDensity,
+                DensidadePopulational)
+UrbanActivitiesVariables_Insect
+PCASUrbanActivitiesVariables_Insect<-prcomp(UrbanActivitiesVariables_Insect[c(1:4)],center = T, scale. = T, rank. = 3)
+summary(PCASUrbanActivitiesVariables_Insect) # The PCA1 axis accounted for 84% of the variation in the urban stream variables
+PCASUrbanActivitiesVariables_Insect
+
+## Looking at the correlation between the variables and the first axis of the PCA
+# PC1 vs HighIntensiveLandUse = 0.4832675
+# PC1 vs AnthropogenicImperviousnessSufaces = 0.5307848
+# PC1 vs RoadsDensity  = 0.4877387
+# PC1 vs DensidadePopulational  = 0.4968208
+# Plotting variable in the PCA axis
+PlotUrbanActivitiesVariables_Insect<-fviz_pca_biplot(PCASUrbanActivitiesVariables_Insect,
+                                                   repel = TRUE,geom = "none", 
+                                                   col.var = "#2E9FDF", # Variables color
+                                                   col.ind = "#696969",
+                                                   pointsize = 0,
+                                                   alpha.ind=0.4
+)+ scale_x_continuous(breaks = c(-4,-2,-0, 2,4,8), limits = c(-3,8))+
+  scale_y_continuous(breaks = c(-4,-2,-0, 2,4), limits = c(-3,4)) 
+
+#####PC1 is positively correlated with all urbanization variables, so we will use the PC1 axis as a proxy for urban intensification in subsequent analyses
+
+## Extracting PCI axis for further analysis
+Axis_UrbanActivitiesVariables_Insect<-predict(PCASUrbanActivitiesVariables_Insect,UrbanActivitiesVariables_Insect)
+UrbanActivityIndex_Insect<-as.data.frame(Axis_UrbanActivitiesVariables_Insect)
+DataEuaInsect$UrbanActivityIndex<-UrbanActivityIndex_Insect$PC1
+
+## remove NAs in the specified columns
+DataEuaInsect1 <- na.omit(DataEuaInsect[,c('SITE_ID', 'Ecoregions', 'YEAR', 'SDDEPTH_CM',
+                                           'XFC_NAT_ALG_AQM', 'SumNat_PFC',
+                                           'InsectDensity',  'Insect_RarefiedChaoRichness', 'ObservedInsectRichness',
+                                           'RegionalInsectTotalLBCD', 'RegionalInsectReplLBCD', 'RegionalInsectRichLBCD',
+                                            'RiparianPresent', 'CatchmentsArea', 'MeanAnnualTemperature', 'MeanPrecipitation',
+                                           'UrbanActivityIndex', 'CroplandIntensity')])
+#Log-transforming drivers
+DataEuaInsect1$CatchmentsArea<-log10(DataEuaInsect1$CatchmentsArea+1)
+DataEuaInsect1$SDDEPTH_CM<-log10(DataEuaInsect1$SDDEPTH_CM+0.1)
+DataEuaInsect1$XFC_NAT_ALG_AQM<-log10(DataEuaInsect1$XFC_NAT_ALG_AQM+1)
+DataEuaInsect1$SumNat_PFC<-log10(DataEuaInsect1$SumNat_PFC+1)
+
+
+####Let's apply structural equations to understand the pathways in which human land-uses influence biodiversity
+#### Paths considered were directly and indirectly mediated by habitat heterogeneity
+####  Let's build individual models for each group of organisms (FISH AND INSECT) and each diversity metric (richness, density and LCBD)
+
+
+## Specify quadratic terms for land-uses
+DataEuaFish1$CroplandIntensity_sq<-DataEuaFish1$CroplandIntensity^2
+DataEuaFish1$UrbanActivityIndex_sq<-DataEuaFish1$UrbanActivityIndex^2
+
+
+### -------------------------------SEM to Fish richness
+modelList1 <-psem(
+  
+  ##------------Regressions
+  #Depth heterogeneity
+  gls(SDDEPTH_CM ~  UrbanActivityIndex_sq + CroplandIntensity_sq,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Presence of riparian vegetation
+  gls(RiparianPresent ~  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanAnnualTemperature + MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+
+  #Habitat heterogeneity paths
+ gls(SumNat_PFC ~ XFC_NAT_ALG_AQM + UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanPrecipitation +  
+          RiparianPresent + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Richness paths
+ gls(sqrt(ObservedFishRichness) ~ SumNat_PFC + XFC_NAT_ALG_AQM + UrbanActivityIndex_sq + CroplandIntensity_sq +   
+      MeanPrecipitation + MeanAnnualTemperature  +  SDDEPTH_CM + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  ##------------Correlation among errors
+ XFC_NAT_ALG_AQM%~~%RiparianPresent,
+ SDDEPTH_CM%~~%RiparianPresent,
+ SumNat_PFC%~~%MeanAnnualTemperature,
+ SDDEPTH_CM%~~%MeanAnnualTemperature,
+ SDDEPTH_CM%~~%XFC_NAT_ALG_AQM,
+ SDDEPTH_CM%~~%SumNat_PFC,
+ sqrt(ObservedFishRichness)%~~%RiparianPresent
+  )
+
+# Model output
+summary(modelList1)
+
+# Extract path coefficients
+coefs(
+  modelList1,
+  standardize =  "scale",
+  standardize.type = "latent.linear",
+  test.statistic = "F",
+  test.type = "I",
+  intercepts = FALSE
+)
+
+
+# Tests of directed separation
+dSep(
+  modelList1,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditioning = FALSE,
+  .progressBar = TRUE)
+
+
+# Summarize tests of directed separation using Fisher’s C statistic
+fisherC(
+  modelList1,
+  add.claims = NULL,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditional = FALSE,
+  .progressBar = FALSE
+)
+
+
+
+multigroup<- sem(model_composition,DataEuaFish1)
+summary(multigroup,
+        standardize = T, 
+        fit.measures = TRUE)
+
+
+### -------------------------------SEM to Fish total density
+modelList2 <-psem(
+  
+  ##------------Regressions
+  #Depth heterogeneity
+  gls(SDDEPTH_CM ~  UrbanActivityIndex_sq + CroplandIntensity_sq,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Presence of riparian vegetation
+  gls(RiparianPresent ~  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanAnnualTemperature + MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Habitat heterogeneity paths
+  gls(SumNat_PFC ~ XFC_ALL + UrbanActivityIndex_sq + CroplandIntensity_sq +  RiparianPresent + 
+        MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Richness paths
+  gls(log10(FishTotalDensity) ~ SumNat_PFC + XFC_ALL + UrbanActivityIndex_sq + CroplandIntensity_sq + 
+        MeanPrecipitation + MeanAnnualTemperature + SDDEPTH_CM + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  ##------------Correlation among errors
+  XFC_ALL%~~%RiparianPresent,
+  SDDEPTH_CM%~~%RiparianPresent,
+  SumNat_PFC%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%XFC_ALL,
+  SDDEPTH_CM%~~%SumNat_PFC,
+  log10(FishTotalDensity)%~~%RiparianPresent
+)
+
+# Model output
+summary(modelList2)
+
+# Extract path coefficients
+coefs(modelList2)
+
+# Tests of directed separation
+dSep(
+  modelList2,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditioning = FALSE,
+  .progressBar = TRUE)
+
+
+# Summarize tests of directed separation using Fisher’s C statistic
+fisherC(
+  modelList2,
+  add.claims = NULL,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditional = FALSE,
+  .progressBar = FALSE
+)
+
+
+### -------------------------------SEM to Fish LCBD
+modelList3 <-psem(
+  
+  ##------------Regressions
+  #Depth heterogeneity
+  gls(SDDEPTH_CM ~  UrbanActivityIndex_sq + CroplandIntensity_sq,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Presence of riparian vegetation
+  gls(RiparianPresent ~  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanAnnualTemperature + MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Habitat heterogeneity paths
+  gls(SumNat_PFC ~ XFC_ALL + UrbanActivityIndex_sq + CroplandIntensity_sq +  RiparianPresent + 
+        MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  
+  #Richness paths
+  gls(log10(RegionalFishTotalLBCD) ~ SumNat_PFC + XFC_ALL + UrbanActivityIndex_sq + CroplandIntensity_sq +  
+        MeanPrecipitation + MeanAnnualTemperature +  SDDEPTH_CM + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaFish1),
+  
+  ##------------Correlation among errors
+  XFC_ALL%~~%RiparianPresent,
+  SDDEPTH_CM%~~%RiparianPresent,
+  SumNat_PFC%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%XFC_ALL,
+  SDDEPTH_CM%~~%SumNat_PFC,
+  log10(RegionalFishTotalLBCD)%~~%RiparianPresent
+)
+
+# Model output
+summary(modelList3)
+
+# Extract path coefficients
+coefs(modelList3)
+
+# Tests of directed separation
+dSep(
+  modelList3,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditioning = FALSE,
+  .progressBar = TRUE)
+
+
+# Summarize tests of directed separation using Fisher’s C statistic
+fisherC(
+  modelList3,
+  add.claims = NULL,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditional = FALSE,
+  .progressBar = FALSE
+)
+
+
+#######################################################################################
+## SEM para insect assemblages
+## Specify quadratic terms for land-uses
+DataEuaInsect1$CroplandIntensity_sq<-DataEuaInsect1$CroplandIntensity^2
+DataEuaInsect1$UrbanActivityIndex_sq<-DataEuaInsect1$UrbanActivityIndex^2
+
+################################################################################################################
+##SEM model to insect assemblages
+### -------------------------------SEM to insect richness
+modelList4 <- psem(
+  ##------------Regressions
+  #Depth heterogeneity
+  gls(SDDEPTH_CM ~  UrbanActivityIndex_sq + CroplandIntensity_sq,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Presence of riparian vegetation
+  gls(RiparianPresent ~  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanAnnualTemperature + MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Habitat heterogeneity paths
+  gls(SumNat_PFC ~ XFC_ALL +  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanPrecipitation +  
+        RiparianPresent + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Richness paths
+  gls(sqrt(ObservedInsectRichness) ~ SumNat_PFC + XFC_ALL + UrbanActivityIndex_sq + CroplandIntensity_sq +  
+        MeanPrecipitation + MeanAnnualTemperature + SDDEPTH_CM + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+##------------Correlation among errors
+XFC_ALL%~~%RiparianPresent,
+sqrt(ObservedInsectRichness)%~~%RiparianPresent,
+SumNat_PFC%~~%MeanAnnualTemperature,
+SDDEPTH_CM%~~%MeanAnnualTemperature,
+SDDEPTH_CM%~~%XFC_ALL,
+SDDEPTH_CM%~~%RiparianPresent,
+SDDEPTH_CM%~~%SumNat_PFC
+)
+
+
+# Model output
+summary(modelList4)
+
+# Extract path coefficients
+coefs(modelList4)
+
+# Tests of directed separation
+dSep(
+  modelList4,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditioning = FALSE,
+  .progressBar = TRUE)
+
+
+# Summarize tests of directed separation using Fisher’s C statistic
+fisherC(
+  modelList4,
+  add.claims = NULL,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditional = FALSE,
+  .progressBar = FALSE
+)
+
+
+### --------------------------------------SEM to insect total density
+modelList5 <- psem(
+  ##------------Regressions
+  #Depth heterogeneity
+  gls(SDDEPTH_CM ~  UrbanActivityIndex_sq + CroplandIntensity_sq,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Presence of riparian vegetation
+  gls(RiparianPresent ~  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanAnnualTemperature + MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Habitat heterogeneity paths
+  gls(SumNat_PFC ~ XFC_ALL +  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanPrecipitation +  
+      RiparianPresent + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Richness paths
+  gls(log10(InsectDensity) ~ SumNat_PFC + XFC_ALL + UrbanActivityIndex_sq + CroplandIntensity_sq +   
+        MeanPrecipitation + MeanAnnualTemperature + SDDEPTH_CM + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  ##------------Correlation among errors
+  XFC_ALL%~~%RiparianPresent,
+  log10(InsectDensity)%~~%RiparianPresent,
+  SumNat_PFC%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%XFC_ALL,
+  SDDEPTH_CM%~~%RiparianPresent,
+  SDDEPTH_CM%~~%SumNat_PFC,
+  SDDEPTH_CM%~~%RiparianPresent
+)
+
+# Model output
+summary(modelList5)
+
+# Extract path coefficients
+coefs(modelList5)
+
+# Tests of directed separation
+dSep(
+  modelList5,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditioning = FALSE,
+  .progressBar = TRUE)
+
+
+# Summarize tests of directed separation using Fisher’s C statistic
+fisherC(
+  modelList5,
+  add.claims = NULL,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditional = FALSE,
+  .progressBar = FALSE
+)
+
+
+
+### --------------------------------------SEM to insect total density
+modelList6 <-psem(
+  
+  ##------------Regressions
+  #Depth heterogeneity
+  gls(SDDEPTH_CM ~  UrbanActivityIndex_sq + CroplandIntensity_sq,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Presence of riparian vegetation
+  gls(RiparianPresent ~  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanAnnualTemperature + MeanPrecipitation + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Habitat heterogeneity paths
+  gls(SumNat_PFC ~ XFC_ALL +  UrbanActivityIndex_sq + CroplandIntensity_sq +  MeanPrecipitation +  
+        RiparianPresent + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  
+  
+  #Richness paths
+  gls(log10(RegionalInsectTotalLBCD) ~ SumNat_PFC + XFC_ALL + UrbanActivityIndex_sq + CroplandIntensity_sq +
+        MeanPrecipitation + MeanAnnualTemperature + SDDEPTH_CM + CatchmentsArea,
+      control=list(msMaxIter=100,opt="optim",msVerbose=TRUE),
+      correlation = corCompSymm(form = ~as.numeric(YEAR)), na.action = "na.fail",
+      data = DataEuaInsect1),
+  ##------------Correlation among errors
+  XFC_ALL%~~%RiparianPresent,
+  log10(RegionalInsectTotalLBCD)%~~%RiparianPresent,
+  SumNat_PFC%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%MeanAnnualTemperature,
+  SDDEPTH_CM%~~%XFC_ALL,
+  SDDEPTH_CM%~~%RiparianPresent,
+  SDDEPTH_CM%~~%SumNat_PFC,
+  SDDEPTH_CM%~~%RiparianPresent
+)
+
+
+# Model output
+summary(modelList6)
+
+# Extract path coefficients
+coefs(modelList6)
+
+# Tests of directed separation
+dSep(
+  modelList6,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditioning = FALSE,
+  .progressBar = TRUE)
+
+
+# Summarize tests of directed separation using Fisher’s C statistic
+fisherC(
+  modelList6,
+  add.claims = NULL,
+  basis.set = NULL,
+  direction = NULL,
+  interactions = FALSE,
+  conserve = FALSE,
+  conditional = FALSE,
+  .progressBar = FALSE
+)
 
 
 
